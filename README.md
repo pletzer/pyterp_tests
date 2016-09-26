@@ -8,8 +8,34 @@
 
 ## Results
 
+### Nodal 2D field
+
 |               | uniform       | rectilinear  | curvilinear |
 | ------------- |---------------|--------------|-------------|
 | Iris          |               |              |             |
 | libcf         |               |              |             |
-| ESMPy         | are neat      |              |             |
+| ESMPy         |               |              |             |
+
+### Nodal 2D field with a vertical axis
+
+|               | uniform       | rectilinear  | curvilinear |
+| ------------- |---------------|--------------|-------------|
+| Iris          |               |              |             |
+| libcf         |               |              |             |
+| ESMPy         |               |              |             |
+
+### Cell 2D field (conservative)
+
+|               | uniform       | rectilinear  | curvilinear |
+| ------------- |---------------|--------------|-------------|
+| Iris          |               |              |             |
+| libcf         |               |              |             |
+| ESMPy         |               |              |             |
+
+### Cell 2D field with a vertical axis (conservative)
+
+|               | uniform       | rectilinear  | curvilinear |
+| ------------- |---------------|--------------|-------------|
+| Iris          |               |              |             |
+| libcf         |               |              |             |
+| ESMPy         |               |              |             |
