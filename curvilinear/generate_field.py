@@ -37,14 +37,22 @@ latMin, latMax = -90.0, +90.0
 lonMin, lonMax = 0.0, 360.0
 
 # latitude/longitude of the pole in degrees
-thetaPole, lambdaPole = 70.0, 20.0
+thetPole, lmbdPole = 70.0, 20.0
 
-cos_thep = numpy.cos(thetaPole * numpy.pi / 180.)
-sin_thep = numpy.sin(thetaPole * numpy.pi / 180.)
+thetPole_rad = thetPole * math.pi / 180.0
+lmbdPole_rad = lmbdPole * math.pi / 180.0
 
 def rotatedLatLon(thet, lmbd):
+    """
+    Compute the curvilinear latitude and longitude
+    @param thet unrotated latitude in degrees
+    @param lmbd unrotated longitude in degrees
+    @return rotated latitude and longitude
+    """
     thet_rad = thet * numpy.pi / 180.
     lmbd_rad = lmbd * numpy.pi / 180.
+    thet_rad -= thetPole_rad
+    lmbd_rad -= lmbdPole_rad
     cos_the = numpy.cos(thet_rad)
     sin_the = numpy.sin(thet_rad)
     cos_lam = numpy.cos(lmbd_rad)
@@ -52,14 +60,8 @@ def rotatedLatLon(thet, lmbd):
     x = cos_the * cos_lam
     y = cos_the * sin_lam
     z = sin_the
-    # rotate y axis by thetaPole 
-    zp = +cos_thep*z + sin_thep*x
-    xp = -sin_thep*z + cos_thep*x
-    yp = y
-    # rotate z axis by  lambdaPole
-    # TO DO 
-    thetaRotated = math.atan2(zp, xp)
-    lambdaRotated = math.atan2(yp, xp)
+    thetaRotated = math.asin(z)
+    lambdaRotated = math.atan2(y, x)
 
     return thetaRotated, lambdaRotated
 
