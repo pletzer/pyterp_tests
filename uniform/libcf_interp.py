@@ -1,8 +1,9 @@
 import pycf
 import numpy
 import sys
-from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p
+from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
 import argparse
+from functools import reduce
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
 parser.add_argument('--src_file', type=str, dest='src_file', default='',
@@ -26,7 +27,7 @@ src_file = args.src_file.encode('UTF-8') # python3
 dst_file = args.dst_file.encode('UTF-8') # python3
 ndims = 2
 
-def createUniformData(filename, prefix):
+def createData(filename, prefix):
 
 	latAxisId = c_int()
 	lonAxisId = c_int()
@@ -45,19 +46,38 @@ def createUniformData(filename, prefix):
 		                                     b"latitude", b"degrees_north", byref(latCoordId))
 	assert(ier == pycf.NC_NOERR)
 	ier = pycf.nccf.nccf_def_coord_from_axes(ndims, axisIds, 1, (prefix + "_lons").encode('UTF-8'), 
-		                                     "longitude", "degrees_east", byref(lonCoordId))
+		                                     b"longitude", b"degrees_east", byref(lonCoordId))
 	assert(ier == pycf.NC_NOERR)
 	coordIds = (c_int * ndims)(latCoordId, lonCoordId)
 	gridId = c_int()
-	ier = pycf.nccf.nccf_def_grid(coordIds, "srcGrid", byref(gridId))
+	ier = pycf.nccf.nccf_def_grid(coordIds, b"srcGrid", byref(gridId))
 	assert(ier == pycf.NC_NOERR)
 
-	return gridId
+	dataId = c_int()
+	read_data = 1
+	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"air_temperature",
+                                            read_data, byref(dataId))
 
-srcGridId = createUniformData(src_file, "src")
-dstGridId = createUniformData(src_file, "dst")
+	return gridId, dataId
 
-# interpolate
+def destroyData(dataId):
+	gridId = c_int()
+	ier = pycf.nccf.nccf_inq_data_gridid(dataId, byref(gridId))
+	assert(ier == pycf.NC_NOERR)
+	coordIds = (c_int * ndims)()
+	ier = pycf.nccf.nccf_inq_grid_coordids(gridId, coordIds)
+	assert(ier == pycf.NC_NOERR)
+
+	ier = pycf.nccf.nccf_free_data(dataId)
+	ier = pycf.nccf.nccf_free_grid(gridId)
+	for i in range(ndims):
+		ier = pycf.nccf.nccf_free_coord(coordIds[i])
+
+
+srcGridId, srcDataId = createData(src_file, b"src")
+dstGridId, dstDataId = createData(dst_file, b"dst")
+
+# compute the interpolation weights
 regridId = c_int()
 ier = pycf.nccf.nccf_def_regrid(srcGridId, dstGridId, byref(regridId))
 assert(ier == pycf.NC_NOERR)
@@ -67,6 +87,31 @@ ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
                                             nitermax, tolpos)
 assert(ier == pycf.NC_NOERR)
 
+# store the reference data values
+xtypep = c_int()
+dstDataPtr = POINTER(c_double)()
+fillValuePtr = c_void_p()
+ier = pycf.nccf.nccf_get_data_pointer(dstDataId, byref(xtypep),
+                                      byref(dstDataPtr), byref(fillValuePtr))
+assert(ier == pycf.NC_NOERR)
+dims = (c_int * ndims)()
+ier = pycf.nccf.nccf_inq_data_dims(dstDataId, dims)
+assert(ier == pycf.NC_NOERR)
+ntot =  reduce(lambda x, y: x*y, dims[:], 1)
+dstDataRef = numpy.zeros((ntot,), numpy.float64)
+for i in range(ntot): 
+	dstDataRef[i] = dstDataPtr[i] # copy
+
+# interpolate (CRASHES!)
+#ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
+assert(ier == pycf.NC_NOERR)
+
 # compute error
+error = 0.0
+for i in range(ntot):
+	error += abs(dstDataPtr[i] - dstDataRef[i])
+print('interpolation error: {}'.format(error))
 
 # clean up
+destroyData(srcDataId)
+destroyData(dstDataId)
