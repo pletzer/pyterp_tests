@@ -26,27 +26,46 @@ src_file = args.src_file.encode('UTF-8') # python3
 dst_file = args.dst_file.encode('UTF-8') # python3
 ndims = 2
 
-# get and construct the src grid
-srcLatAxisId = c_int()
-ier = pycf.nccf.nccf_def_axis_from_file(src_file, b"latitude", byref(srcLatAxisId))
-assert(ier == pycf.NC_NOERR)
-"""
-srcLonAxisId = c_int()
-ier = pycf.nccf.nccf_def_axis_from_file(args.src_file, "longitude", byref(srcLonAxisId))
-srcAxisIds = (c_int * ndims)(srcLatAxisId.value, srcLonAxisId.value)
-srcLatCoordId = c_int()
-ier = pycf.nccf.nccf_def_coord_from_axes(ndims, srcAxisIds, 0, "src_lats", "latitude", "degrees_north", byref(srcLatCoordId))
-srcLonCoordId = c_int()
-ier = pycf.nccf.nccf_def_coord_from_axes(ndims, srcAxisIds, 1, "src_lons", "longitude", "degrees_east", byref(srcLonCoordId))
-srcCoordIds = (c_int * ndims)(srcLatCoordId.value, srcLonCoordId.value)
-srcGridId  = c_int()
-ier = pycf.nccf.nccf_def_grid(srcCoordIds, "srcGrid", byref(srcGridId))
-"""
+def createUniformData(filename, prefix):
 
+	latAxisId = c_int()
+	lonAxisId = c_int()
+	latCoordId = c_int()
+	lonCoordId = c_int()
+	gridId = c_int()
+	dataId = c_int()
+
+	ier = pycf.nccf.nccf_def_axis_from_file(filename, b"latitude", byref(latAxisId))
+	assert(ier == pycf.NC_NOERR)
+	ier = pycf.nccf.nccf_def_axis_from_file(filename, b"longitude", byref(lonAxisId))
+	assert(ier == pycf.NC_NOERR)
+
+	axisIds = (c_int * ndims)(latAxisId, lonAxisId)
+	ier = pycf.nccf.nccf_def_coord_from_axes(ndims, axisIds, 0, (prefix + "_lats").encode('UTF-8'),
+		                                     b"latitude", b"degrees_north", byref(latCoordId))
+	assert(ier == pycf.NC_NOERR)
+	ier = pycf.nccf.nccf_def_coord_from_axes(ndims, axisIds, 1, (prefix + "_lons").encode('UTF-8'), 
+		                                     "longitude", "degrees_east", byref(lonCoordId))
+	assert(ier == pycf.NC_NOERR)
+	coordIds = (c_int * ndims)(latCoordId, lonCoordId)
+	gridId = c_int()
+	ier = pycf.nccf.nccf_def_grid(coordIds, "srcGrid", byref(gridId))
+	assert(ier == pycf.NC_NOERR)
+
+	return gridId
+
+srcGridId = createUniformData(src_file, "src")
+dstGridId = createUniformData(src_file, "dst")
 
 # interpolate
 regridId = c_int()
-#ier = pycf.nccf.nccf_def_regrid(srcGridId.value, dstGridId.value, byref(regridId))
+ier = pycf.nccf.nccf_def_regrid(srcGridId, dstGridId, byref(regridId))
+assert(ier == pycf.NC_NOERR)
+nitermax = 100
+tolpos = c_double(1.e-10)
+ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
+                                            nitermax, tolpos)
+assert(ier == pycf.NC_NOERR)
 
 # compute error
 
