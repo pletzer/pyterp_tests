@@ -57,6 +57,7 @@ def createData(filename, prefix):
 	read_data = 1
 	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"air_temperature",
                                             read_data, byref(dataId))
+	assert(ier == pycf.NC_NOERR)
 
 	return gridId, dataId
 
@@ -69,9 +70,12 @@ def destroyData(dataId):
 	assert(ier == pycf.NC_NOERR)
 
 	ier = pycf.nccf.nccf_free_data(dataId)
+	assert(ier == pycf.NC_NOERR)
 	ier = pycf.nccf.nccf_free_grid(gridId)
+	assert(ier == pycf.NC_NOERR)
 	for i in range(ndims):
 		ier = pycf.nccf.nccf_free_coord(coordIds[i])
+		assert(ier == pycf.NC_NOERR)
 
 
 srcGridId, srcDataId = createData(src_file, b"src")
@@ -86,6 +90,12 @@ tolpos = c_double(1.e-10)
 ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
                                             nitermax, tolpos)
 assert(ier == pycf.NC_NOERR)
+ntargets = c_int()
+ier = pycf.nccf.nccf_inq_regrid_ntargets(regridId, byref(ntargets))
+assert(ier == pycf.NC_NOERR)
+nvalid = c_int()
+ier = pycf.nccf.nccf_inq_regrid_nvalid(regridId, byref(nvalid))
+assert(ier == pycf.NC_NOERR)
 
 # store the reference data values
 xtypep = c_int()
@@ -97,7 +107,7 @@ assert(ier == pycf.NC_NOERR)
 dims = (c_int * ndims)()
 ier = pycf.nccf.nccf_inq_data_dims(dstDataId, dims)
 assert(ier == pycf.NC_NOERR)
-ntot =  reduce(lambda x, y: x*y, dims[:], 1)
+ntot = reduce(lambda x, y: x*y, dims[:], 1)
 dstDataRef = numpy.zeros((ntot,), numpy.float64)
 for i in range(ntot): 
 	dstDataRef[i] = dstDataPtr[i] # copy
@@ -110,7 +120,9 @@ assert(ier == pycf.NC_NOERR)
 error = 0.0
 for i in range(ntot):
 	error += abs(dstDataPtr[i] - dstDataRef[i])
-print('interpolation error: {}'.format(error))
+error /= float(ntot)
+print('interpolation error: {} (# targets = {}, # valid points = {})'.format(error, 
+	  ntargets.value, nvalid.value))
 
 # clean up
 destroyData(srcDataId)
