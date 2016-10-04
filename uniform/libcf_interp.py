@@ -6,10 +6,15 @@ import argparse
 from functools import reduce
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
-parser.add_argument('--src_file', type=str, dest='src_file', default='',
+parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
-parser.add_argument('--dst_file', type=str, dest='dst_file', default='',
+parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-8,
+	                help='Tolerance in target space')
+parser.add_argument('--nitermax', type=int, dest='nitermax', default=100,
+	                help='Max number of iterations')
+
 
 args = parser.parse_args()
 
@@ -77,6 +82,26 @@ def destroyData(dataId):
 		ier = pycf.nccf.nccf_free_coord(coordIds[i])
 		assert(ier == pycf.NC_NOERR)
 
+def inquireDataSizes(dataId):
+	dims = (c_int * ndims)()
+	ier = pycf.nccf.nccf_inq_data_dims(dataId, dims)
+	assert(ier == pycf.NC_NOERR)
+	ntot = reduce(lambda x, y: x*y, dims[:], 1)
+	return ntot, dims
+
+def getDataAsArray(dataId):
+	xtypep = c_int()
+	dataPtr = POINTER(c_double)()
+	fillValuePtr = c_void_p()
+	ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
+                                          byref(dataPtr), byref(fillValuePtr))
+	assert(ier == pycf.NC_NOERR)
+	assert(xtypep.value == pycf.NC_DOUBLE)
+	ntot, dims = inquireDataSizes(dataId)
+	data = numpy.ctypeslib.as_array(dataPtr, shape=(ntot,))
+	# return a copy
+	return data.copy()
+
 
 srcGridId, srcDataId = createData(src_file, b"src")
 dstGridId, dstDataId = createData(dst_file, b"dst")
@@ -85,44 +110,36 @@ dstGridId, dstDataId = createData(dst_file, b"dst")
 regridId = c_int()
 ier = pycf.nccf.nccf_def_regrid(srcGridId, dstGridId, byref(regridId))
 assert(ier == pycf.NC_NOERR)
-nitermax = 100
-tolpos = c_double(1.e-10)
+nitermax = c_int(args.nitermax)
+tolpos = c_double(args.tolpos)
 ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
                                             nitermax, tolpos)
 assert(ier == pycf.NC_NOERR)
-ntargets = c_int()
-ier = pycf.nccf.nccf_inq_regrid_ntargets(regridId, byref(ntargets))
-assert(ier == pycf.NC_NOERR)
+
+# get the the number of valid target points
 nvalid = c_int()
 ier = pycf.nccf.nccf_inq_regrid_nvalid(regridId, byref(nvalid))
 assert(ier == pycf.NC_NOERR)
 
 # store the reference data values
-xtypep = c_int()
-dstDataPtr = POINTER(c_double)()
-fillValuePtr = c_void_p()
-ier = pycf.nccf.nccf_get_data_pointer(dstDataId, byref(xtypep),
-                                      byref(dstDataPtr), byref(fillValuePtr))
-assert(ier == pycf.NC_NOERR)
-dims = (c_int * ndims)()
-ier = pycf.nccf.nccf_inq_data_dims(dstDataId, dims)
-assert(ier == pycf.NC_NOERR)
-ntot = reduce(lambda x, y: x*y, dims[:], 1)
-dstDataRef = numpy.zeros((ntot,), numpy.float64)
-for i in range(ntot): 
-	dstDataRef[i] = dstDataPtr[i] # copy
+dstDataRef = getDataAsArray(dstDataId)
 
-# interpolate (CRASHES!)
+# interpolate
 ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
 assert(ier == pycf.NC_NOERR)
 
+dstDataInterp = getDataAsArray(dstDataId)
+
+srcNtot, srcDims = inquireDataSizes(srcDataId)
+dstNtot, dstDims = inquireDataSizes(dstDataId)
+
 # compute error
-error = 0.0
-for i in range(ntot):
-	error += abs(dstDataPtr[i] - dstDataRef[i])
-error /= float(ntot)
-print('interpolation error: {} (# targets = {}, # valid points = {})'.format(error, 
-	  ntargets.value, nvalid.value))
+error =  numpy.sum(abs(dstDataInterp - dstDataRef)) / float(dstNtot)
+print('libcf interpolation:')
+print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
+print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
+print('\t     # valid points: {}'.format(nvalid.value))
+print('interpolation error: {}'.format(error))
 
 # clean up
 destroyData(srcDataId)
