@@ -50,7 +50,7 @@ def createData(filename, prefix):
 	assert(ier == pycf.NC_NOERR)
 	coordIds = (c_int * ndims)(latCoordId, lonCoordId)
 	gridId = c_int()
-	ier = pycf.nccf.nccf_def_grid(coordIds, b"srcGrid", byref(gridId))
+	ier = pycf.nccf.nccf_def_grid(coordIds, (prefix + "grid").encode('UTF-8'), byref(gridId))
 	assert(ier == pycf.NC_NOERR)
 
 	dataId = c_int()
@@ -103,7 +103,7 @@ for i in range(ntot):
 	dstDataRef[i] = dstDataPtr[i] # copy
 
 # interpolate (CRASHES!)
-#ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
+ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
 assert(ier == pycf.NC_NOERR)
 
 # compute error
