@@ -1,9 +1,11 @@
+from __future__ import print_function
 import pycf
 import numpy
 import sys
 from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
 import argparse
 from functools import reduce
+import time
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
@@ -14,7 +16,6 @@ parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-8,
 	                help='Tolerance in target space')
 parser.add_argument('--nitermax', type=int, dest='nitermax', default=100,
 	                help='Max number of iterations')
-
 
 args = parser.parse_args()
 
@@ -102,6 +103,10 @@ def getDataAsArray(dataId):
 	# return a copy
 	return data.copy()
 
+timeStats = {
+	'index search': float('nan'),
+	'evaluation': float('nan'),
+}
 
 srcGridId, srcDataId = createData(src_file, b"src")
 dstGridId, dstDataId = createData(dst_file, b"dst")
@@ -112,9 +117,13 @@ ier = pycf.nccf.nccf_def_regrid(srcGridId, dstGridId, byref(regridId))
 assert(ier == pycf.NC_NOERR)
 nitermax = c_int(args.nitermax)
 tolpos = c_double(args.tolpos)
+
+tic = time.time()
 ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
                                             nitermax, tolpos)
+toc = time.time()
 assert(ier == pycf.NC_NOERR)
+timeStats['index search'] = toc - tic
 
 # get the the number of valid target points
 nvalid = c_int()
@@ -125,8 +134,11 @@ assert(ier == pycf.NC_NOERR)
 dstDataRef = getDataAsArray(dstDataId)
 
 # interpolate
+tic = time.time()
 ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
+toc = time.time()
 assert(ier == pycf.NC_NOERR)
+timeStats['evaluation'] = toc - tic
 
 dstDataInterp = getDataAsArray(dstDataId)
 
@@ -140,6 +152,10 @@ print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
 print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
 print('\t     # valid points: {}'.format(nvalid.value))
 print('interpolation error: {}'.format(error))
+print('time stats:')
+for k, v in timeStats.items():
+	print('\t{0:<32} {1:>.3g} sec'.format(k, v))
+print()
 
 # clean up
 destroyData(srcDataId)
