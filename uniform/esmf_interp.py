@@ -44,9 +44,7 @@ def createData(filename, prefix):
 
 	latIndex, lonIndex = 0, 1 # or 1, 0????
 	cellDims = numpy.array([len(lats) - 1, len(lons) - 1])
-	grid = ESMF.Grid(max_index=cellDims, 
-		             coord_sys=ESMF.CoordSys.SPH_DEG, coord_typekind=ESMF.TypeKind.R8,
-                     num_peri_dims=1, periodic_dim=0, pole_dim=1)
+	grid = ESMF.Grid(max_index=cellDims)
 
 	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
 	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
@@ -69,22 +67,20 @@ def createData(filename, prefix):
 	# create field
 	field = ESMF.Field(grid, name="air_temperature", 
 		               staggerloc=ESMF.StaggerLoc.CORNER)
+	print(field.data.shape)
 	field.data[...] = cube.data[:]
 
-	return field, grid
+	nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
 
-
-def destroyData(dataId):
-	pass
-
+	return grid, field, nodeDims
 
 timeStats = {
-	'index search': float('nan'),
+	'weights': float('nan'),
 	'evaluation': float('nan'),
 }
 
-srcGrid, srcData = createData(src_file, b"src")
-dstGrid, dstData = createData(dst_file, b"dst")
+srcGrid, srcData, srcNodeDims = createData(src_file, b"src")
+dstGrid, dstData, dstNodeDims = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.data.copy()
@@ -108,9 +104,8 @@ srcNtot = len(srcData.data.flat)
 dstNtot = len(dstData.data.flat)
 error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
 print('emsf interpolation:')
-print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
-print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
-print('\t     # valid points: {}'.format(nvalid.value))
+print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
+print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
 print('interpolation error: {}'.format(error))
 print('time stats:')
 for k, v in timeStats.items():
@@ -118,5 +113,4 @@ for k, v in timeStats.items():
 print()
 
 # clean up
-destroyData(srcDataId)
-destroyData(dstDataId)
+# nothing to do
