@@ -14,9 +14,9 @@ parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=31,
                     help='Destination latitude axis dimension')
 parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=51, 
                     help='Destination longitude axis dimension')
-parser.add_argument('--src_file', type=str, dest='src_file', default='',
+parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
-parser.add_argument('--dst_file', type=str, dest='dst_file', default='',
+parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
 
 args = parser.parse_args()
@@ -45,11 +45,11 @@ dstData = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
 # set the field to some arbitrary expression
 for j in range(args.src_nj):
 	for i in range(args.src_ni):
-		srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i])*numpy.cos(numpy.pi*srcLats[j])
+		srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i]/180.)*numpy.cos(numpy.pi*srcLats[j]/180.)
 
 for j in range(args.dst_nj):
 	for i in range(args.dst_ni):
-		dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i])*numpy.cos(numpy.pi*dstLats[j])
+		dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i]/180.)*numpy.cos(numpy.pi*dstLats[j]/180.)
 
 srcLatCoord = iris.coords.DimCoord(srcLats, standard_name='latitude', units='degrees_north')
 srcLonCoord = iris.coords.DimCoord(srcLons, standard_name='longitude', units='degrees_east')

@@ -104,7 +104,7 @@ def getDataAsArray(dataId):
 	return data.copy()
 
 timeStats = {
-	'index search': float('nan'),
+	'weights': float('nan'),
 	'evaluation': float('nan'),
 }
 
@@ -123,7 +123,7 @@ ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
                                             nitermax, tolpos)
 toc = time.time()
 assert(ier == pycf.NC_NOERR)
-timeStats['index search'] = toc - tic
+timeStats['weights'] = toc - tic
 
 # get the the number of valid target points
 nvalid = c_int()
