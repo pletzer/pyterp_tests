@@ -1,5 +1,6 @@
 from __future__ import print_function
 import ESMF
+import iris
 import numpy
 import sys
 from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
@@ -32,8 +33,45 @@ ndims = 2
 def createData(filename, prefix):
 	# use iris to read in the data
 	# then pass the array to the ESMF API
-	data = iris.load_cube(filename, 'air_temperature')
-	grid = ESMF.Grid(filename=filename, filetype)
+	cube = iris.load_cube(filename, 'air_temperature')
+	coords = cube.coords()
+	lats = coords[0].points
+	lons = coords[1].points
+	
+	# NOTE fortran ordering here
+
+	# create the ESMF grid object
+
+	latIndex, lonIndex = 0, 1 # or 1, 0????
+	cellDims = numpy.array([len(lats) - 1, len(lons) - 1])
+	grid = ESMF.Grid(max_index=cellDims, 
+		             coord_sys=ESMF.CoordSys.SPH_DEG, coord_typekind=ESMF.TypeKind.R8,
+                     num_peri_dims=1, periodic_dim=0, pole_dim=1)
+
+	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
+	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
+
+	coordLat = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+	coordLon = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+
+	# get the local start/end index sets
+	iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
+	iEndLat = grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
+	iBegLon = grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+	iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+
+	# set the coordinates
+	for j in range(iBegLat, iEndLat):
+		for i in range(iBegLon, iEndLon):
+			coordLat[j, i] = lats[j]
+			coordLon[j, i] = lons[i]
+
+	# create field
+	field = ESMF.Field(grid, name="air_temperature", 
+		               staggerloc=ESMF.StaggerLoc.CORNER)
+	field.data[...] = cube.data[:]
+
+	return field, grid
 
 
 def destroyData(dataId):
@@ -47,6 +85,9 @@ timeStats = {
 
 srcGrid, srcData = createData(src_file, b"src")
 dstGrid, dstData = createData(dst_file, b"dst")
+
+# save the reference (exact) field data
+dstDataRef = dstData.data.copy()
 
 # compute the interpolation weights
 tic = time.time()
@@ -62,36 +103,11 @@ tic = time.time()
 regrid(srcData, dstData)
 timeStats['evaluation'] = time.time() - tic
 
-tic = time.time()
-ier = pycf.nccf.nccf_compute_regrid_weights(regridId,
-                                            nitermax, tolpos)
-toc = time.time()
-assert(ier == pycf.NC_NOERR)
-timeStats['index search'] = toc - tic
-
-# get the the number of valid target points
-nvalid = c_int()
-ier = pycf.nccf.nccf_inq_regrid_nvalid(regridId, byref(nvalid))
-assert(ier == pycf.NC_NOERR)
-
-# store the reference data values
-dstDataRef = getDataAsArray(dstDataId)
-
-# interpolate
-tic = time.time()
-ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
-toc = time.time()
-assert(ier == pycf.NC_NOERR)
-timeStats['evaluation'] = toc - tic
-
-dstDataInterp = getDataAsArray(dstDataId)
-
-srcNtot, srcDims = inquireDataSizes(srcDataId)
-dstNtot, dstDims = inquireDataSizes(dstDataId)
-
 # compute error
-error =  numpy.sum(abs(dstDataInterp - dstDataRef)) / float(dstNtot)
-print('libcf interpolation:')
+srcNtot = len(srcData.data.flat)
+dstNtot = len(dstData.data.flat)
+error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
+print('emsf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
 print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
 print('\t     # valid points: {}'.format(nvalid.value))
