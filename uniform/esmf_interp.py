@@ -67,7 +67,6 @@ def createData(filename, prefix):
 	# create field
 	field = ESMF.Field(grid, name="air_temperature", 
 		               staggerloc=ESMF.StaggerLoc.CORNER)
-	print(field.data.shape)
 	field.data[...] = cube.data[:]
 
 	nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
