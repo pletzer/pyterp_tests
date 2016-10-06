@@ -59,10 +59,8 @@ def createData(filename, prefix):
 	iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
 
 	# set the coordinates
-	for j in range(iBegLat, iEndLat):
-		for i in range(iBegLon, iEndLon):
-			coordLat[j, i] = lats[j]
-			coordLon[j, i] = lons[i]
+	coordLat[...] = numpy.outer(lats[iBegLat:iEndLat], numpy.ones((iEndLon - iBegLon,), coordLat.dtype))
+	coordLon[...] = numpy.outer(numpy.ones((iEndLat - iBegLat,), coordLon.dtype), lons[iBegLon:iEndLon])
 
 	# create field
 	field = ESMF.Field(grid, name="air_temperature", 
@@ -105,7 +103,7 @@ error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
 print('emsf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
-print('interpolation error: {}'.format(error))
+print('interpolation error: {:.3g}'.format(error))
 totTime = 0.0
 print('time stats:')
 for k, v in timeStats.items():

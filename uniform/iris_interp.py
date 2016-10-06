@@ -58,7 +58,7 @@ error =  numpy.sum(abs(interpCube.data - dstDataRef)) / float(dstNtot)
 print('iris interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
-print('interpolation error: {}'.format(error))
+print('interpolation error: {:.3g}'.format(error))
 print('time stats:')
 for k, v in timeStats.items():
 	print('\t{0:<32} {1:>.3g} sec'.format(k, v))

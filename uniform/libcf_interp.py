@@ -151,7 +151,7 @@ print('libcf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
 print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
 print('\t     # valid points: {}'.format(nvalid.value))
-print('interpolation error: {}'.format(error))
+print('interpolation error: {:.3g}'.format(error))
 print('time stats:')
 totTime = 0.0
 for k, v in timeStats.items():
