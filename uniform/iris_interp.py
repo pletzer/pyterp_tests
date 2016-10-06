@@ -50,11 +50,11 @@ interpCube = srcCube.regrid(dstCube, scheme=scheme)
 timeStats['interp'] = time.time() - tic
 
 # compute error
-srcNtot = len(srcData.data.flat)
-dstNtot = len(dstData.data.flat)
+srcNtot = len(srcCube.data.flat)
+dstNtot = len(dstCube.data.flat)
 srcNodeDims = srcCube.data.shape
 dstNodeDims = dstCube.data.shape
-error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
+error =  numpy.sum(abs(interpCube.data - dstDataRef)) / float(dstNtot)
 print('iris interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
