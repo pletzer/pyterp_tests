@@ -8,6 +8,9 @@ import argparse
 from functools import reduce
 import time
 
+# turn on logging
+esmpy = ESMF.Manager(debug=True)
+
 parser = argparse.ArgumentParser(description='Interpolate using ESMF')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
@@ -38,13 +41,12 @@ def createData(filename, prefix):
 	lats = coords[0].points
 	lons = coords[1].points
 	
-	# NOTE fortran ordering here
-
 	# create the ESMF grid object
 
-	latIndex, lonIndex = 0, 1 # or 1, 0????
-	cellDims = numpy.array([len(lats) - 1, len(lons) - 1])
-	grid = ESMF.Grid(max_index=cellDims)
+	latIndex, lonIndex = 0, 1
+	cellDims = numpy.array([lats.shape[0] - 1, lats.shape[1] - 1])
+	grid = ESMF.Grid(max_index=cellDims, 
+		             num_peri_dims=1, periodic_dim=1)
 
 	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
 	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
@@ -59,8 +61,8 @@ def createData(filename, prefix):
 	iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
 
 	# set the coordinates
-	coordLat[...] = numpy.outer(lats[iBegLat:iEndLat], numpy.ones((iEndLon - iBegLon,), coordLat.dtype))
-	coordLon[...] = numpy.outer(numpy.ones((iEndLat - iBegLat,), coordLon.dtype), lons[iBegLon:iEndLon])
+	coordLat[...] = lats[iBegLat:iEndLat, iBegLon:iEndLon]
+	coordLon[...] = lons[iBegLat:iEndLat, iBegLon:iEndLon]
 
 	# create field
 	field = ESMF.Field(grid, name="air_temperature", 
