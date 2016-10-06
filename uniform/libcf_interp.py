@@ -153,9 +153,11 @@ print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
 print('\t     # valid points: {}'.format(nvalid.value))
 print('interpolation error: {}'.format(error))
 print('time stats:')
+totTime = 0.0
 for k, v in timeStats.items():
 	print('\t{0:<32} {1:>.3g} sec'.format(k, v))
-print()
+	totTime += v
+print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # clean up
 destroyData(srcDataId)

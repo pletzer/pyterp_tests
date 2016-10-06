@@ -106,10 +106,12 @@ print('emsf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
 print('interpolation error: {}'.format(error))
+totTime = 0.0
 print('time stats:')
 for k, v in timeStats.items():
 	print('\t{0:<32} {1:>.3g} sec'.format(k, v))
-print()
+	totTime += v
+print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # clean up
 # nothing to do
