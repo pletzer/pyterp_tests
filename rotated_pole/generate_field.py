@@ -15,9 +15,9 @@ parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=121,
                     help='Destination latitude axis dimension')
 parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=241, 
                     help='Destination longitude axis dimension')
-parser.add_argument('--theta_pole', type=float, dest='theta_pole', default=0.0, 
+parser.add_argument('--delta_theta', type=float, dest='delta_theta', default=20.0, 
                     help='Latitude of displaced pole')
-parser.add_argument('--lambda_pole', type=float, dest='lambda_pole', default=0.0, 
+parser.add_argument('--delta_lambda', type=float, dest='delta_lambda', default=0.0, 
                     help='Longitude of displaced pole')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
@@ -39,53 +39,45 @@ if args.dst_file is '':
 latMin, latMax = -90.0, +90.0
 lonMin, lonMax = 0.0, 360.0
 
+def createCoordAndData(latsPrime, lonsPrime):
+    """
+    Create coordinates and data from axes
+    @param latsPrime latitude logical axis
+    @param lonsPrime longitude logical axis
+    @return curvilinear latitudes, longitudes and data
+    """
+    nj, ni = len(latsPrime), len(lonsPrime)
+    lats = numpy.zeros((nj, ni,), numpy.float64)
+    lons = numpy.zeros((nj, ni,), numpy.float64)
+    data = numpy.zeros((nj, ni,), numpy.float64)
+    for j in range(nj):
+        the = math.pi * (latsPrime[j] - args.delta_theta) / 180.
+        cos_the = math.cos(the)
+        sin_the = math.sin(the)
+        for i in range(ni):
+            lam = math.pi * (lonsPrime[i] - args.delta_lambda) / 180.
+            cos_lam = math.cos(lam)
+            sin_lam = math.sin(lam)
+            x = cos_the * cos_lam
+            y = cos_the * sin_lam
+            z = sin_the
+            rho = math.sqrt(x*x + y*y)
+            lats[j, i] = 180. * math.atan2(z, rho) / math.pi
+            lons[j, i] = 180. * math.atan2(y, x) / math.pi
+            # arbitrary function
+            data[j, i] = math.sin(2*math.pi*lons[j, i]/180.)*numpy.cos(math.pi*lats[j, i]/180.)
+
+    return lats, lons, data
+
 # generate the axes
 srcLatsPrime = numpy.linspace(latMin, latMax, args.src_nj)
 srcLonsPrime = numpy.linspace(lonMin, lonMax, args.src_ni)
-srcLats = numpy.zeros((args.src_nj, args.src_ni), numpy.float64)
-srcLons = numpy.zeros((args.src_nj, args.src_ni), numpy.float64)
-srcData = numpy.zeros((args.src_nj, args.src_ni), numpy.float64)
-
-
 dstLatsPrime = numpy.linspace(latMin, latMax, args.dst_nj)
 dstLonsPrime = numpy.linspace(lonMin, lonMax, args.dst_ni)
-dstLats = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
-dstLons = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
-dstData = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
 
 # set the curvilinear coords and field
-for j in range(args.src_nj):
-    the = math.pi * (srcLatsPrime[j] - args.theta_pole) / 180.
-    cos_the = math.cos(the)
-    sin_the = math.sin(the)
-    for i in range(args.src_ni):
-        lam = math.pi * (srcLonsPrime[i] - args.lambda_pole) / 180.
-        cos_lam = math.cos(lam)
-        sin_lam = math.sin(lam)
-        x = cos_the * cos_lam
-        y = cos_the * sin_lam
-        z = sin_the
-        rho = math.sqrt(x*x + y*y)
-        srcLats[j, i] = math.atan2(z, rho)
-        srcLons[j, i] = math.atan2(y, x)
-        # arbitrary function
-        srcData[j, i] = math.sin(2*math.pi*srcLons[j, i]/180.)*numpy.cos(math.pi*srcLats[j, i]/180.)
-
-for j in range(args.dst_nj):
-    the = math.pi * (dstLatsPrime[j] - args.theta_pole) / 180.
-    cos_the = math.cos(the)
-    sin_the = math.sin(the)
-    for i in range(args.dst_ni):
-        lam = math.pi * (dstLonsPrime[i] - args.lambda_pole) / 180.
-        cos_lam = math.cos(lam)
-        sin_lam = math.sin(lam)
-        x = cos_the * cos_lam
-        y = cos_the * sin_lam
-        z = sin_the
-        rho = math.sqrt(x*x + y*y)
-        dstLats[j, i] = math.atan2(z, rho)
-        dstLons[j, i] = math.atan2(y, x)
-        dstData[j, i] = math.sin(2*math.pi*dstLons[j, i]/180.)*math.cos(math.pi*dstLats[j, i]/180.)
+srcLats, srcLons, srcData = createCoordAndData(srcLatsPrime, srcLonsPrime)
+dstLats, dstLons, dstData = createCoordAndData(dstLatsPrime, dstLonsPrime)
 
 srcLatCoord = iris.coords.AuxCoord(srcLats, standard_name='latitude', units='degrees_north')
 srcLonCoord = iris.coords.AuxCoord(srcLons, standard_name='longitude', units='degrees_east')
@@ -98,7 +90,6 @@ dstLonCoord = iris.coords.AuxCoord(dstLons, standard_name='longitude', units='de
 dstCube = iris.cube.Cube(dstData, standard_name='air_temperature', cell_methods=None)
 dstCube.add_aux_coord(dstLatCoord, data_dims=(0, 1))
 dstCube.add_aux_coord(dstLonCoord, data_dims=(0, 1))
-
 
 # save the result
 iris.save(srcCube, args.src_file)

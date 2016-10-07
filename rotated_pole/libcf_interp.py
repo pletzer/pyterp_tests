@@ -54,6 +54,11 @@ def createData(filename, prefix):
 	ier = pycf.nccf.nccf_def_grid(coordIds, (prefix + "grid").encode('UTF-8'), byref(gridId))
 	assert(ier == pycf.NC_NOERR)
 
+	periodicity_lengths = (c_double * ndims)()
+	ier = pycf.nccf.nccf_inq_grid_periodicity(gridId, periodicity_lengths)
+	assert(ier == pycf.NC_NOERR)
+	print('periodicity lengths: {}'.format(periodicity_lengths[:]))
+
 	dataId = c_int()
 	read_data = 1
 	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"air_temperature",
@@ -145,7 +150,10 @@ error =  numpy.sum(abs(dstDataInterp - dstDataRef)) / float(dstNtot)
 print('libcf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
 print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
-print('\t     # valid points: {}'.format(nvalid.value))
+ninvalid = dstNtot - nvalid.value
+print('\t     # invalid points: {} ({:.3f}%)'.format(ninvalid,
+	                                           100*ninvalid/float(dstNtot)))
+
 print('interpolation error: {:.3g}'.format(error))
 print('time stats:')
 totTime = 0.0
