@@ -45,8 +45,7 @@ def createData(filename, prefix):
 
 	latIndex, lonIndex = 0, 1
 	cellDims = numpy.array([lats.shape[0] - 1, lats.shape[1] - 1])
-	grid = ESMF.Grid(max_index=cellDims, 
-		             num_peri_dims=1, periodic_dim=1)
+	grid = ESMF.Grid(max_index=cellDims) #, num_peri_dims=1, periodic_dim=1)
 
 	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
 	grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
