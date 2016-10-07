@@ -8,18 +8,18 @@ import grid_mapper
 iris.FUTURE.netcdf_no_unlimited = True
 
 parser = argparse.ArgumentParser(description='Generate uniform data in 2d')
-parser.add_argument('--src_nj', type=int, dest='src_nj', default=41, 
+parser.add_argument('--src_nj', type=int, dest='src_nj', default=21, 
                     help='Source latitude axis dimension')
-parser.add_argument('--src_ni', type=int, dest='src_ni', default=81, 
+parser.add_argument('--src_ni', type=int, dest='src_ni', default=41, 
                     help='Source longitude axis dimension')
-parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=121, 
+parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=31, 
                     help='Destination latitude axis dimension')
-parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=241, 
+parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=51, 
                     help='Destination longitude axis dimension')
-parser.add_argument('--delta_theta', type=float, dest='delta_theta', default=30.0, 
-                    help='Latitude of displaced pole')
-parser.add_argument('--delta_lambda', type=float, dest='delta_lambda', default=00.0, 
-                    help='Longitude of displaced pole')
+parser.add_argument('--delta_lat', type=float, dest='delta_lat', default=20.0, 
+                    help='Pole displacement in latitude')
+parser.add_argument('--delta_lon', type=float, dest='delta_lon', default=0.0, 
+                    help='Pole displacement in longitude')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
@@ -49,7 +49,7 @@ dstLonsPrime = numpy.linspace(lonMin, lonMax, args.dst_ni)
 
 # set the curvilinear coords and field
 srcLats, srcLons, srcData = grid_mapper.createCoordAndData(srcLatsPrime, srcLonsPrime, 
-    delta_theta=args.delta_theta, delta_lambda=args.delta_lambda)
+    delta_lat=args.delta_lat, delta_lon=args.delta_lon)
 srcLatMin, srcLatMax = min(srcLats.flat), max(srcLats.flat)
 srcLonMin, srcLonMax = min(srcLons.flat), max(srcLons.flat)
 print('src lat: min = {} max = {}'.format(srcLatMin, srcLatMax))
@@ -57,7 +57,7 @@ print('src lon: min = {} max = {}'.format(srcLonMin, srcLonMax))
 
 # target grid is regular lat-lon
 dstLats, dstLons, dstData = grid_mapper.createCoordAndData(dstLatsPrime, dstLonsPrime,
-    delta_theta=0.0, delta_lambda=0.0)
+    delta_lat=0.0, delta_lon=0.0)
 dstLatMin, dstLatMax = min(dstLats.flat), max(dstLats.flat)
 dstLonMin, dstLonMax = min(dstLons.flat), max(dstLons.flat)
 print('dst lat: min = {} max = {}'.format(dstLatMin, dstLatMax))
