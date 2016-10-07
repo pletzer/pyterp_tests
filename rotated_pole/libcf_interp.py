@@ -46,7 +46,7 @@ def createData(filename, prefix):
 	assert(ier == pycf.NC_NOERR)
 	ier = pycf.nccf.nccf_def_coord_from_file(filename, 
 		                                     b"longitude",
-		                                     byref(latCoordId))
+		                                     byref(lonCoordId))
 	assert(ier == pycf.NC_NOERR)
 
 	coordIds = (c_int * ndims)(latCoordId, lonCoordId)
