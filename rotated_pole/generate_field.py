@@ -3,6 +3,7 @@ import numpy
 import iris
 import sys
 import math
+import grid_mapper
 
 iris.FUTURE.netcdf_no_unlimited = True
 
@@ -15,9 +16,9 @@ parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=121,
                     help='Destination latitude axis dimension')
 parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=241, 
                     help='Destination longitude axis dimension')
-parser.add_argument('--delta_theta', type=float, dest='delta_theta', default=20.0, 
+parser.add_argument('--delta_theta', type=float, dest='delta_theta', default=30.0, 
                     help='Latitude of displaced pole')
-parser.add_argument('--delta_lambda', type=float, dest='delta_lambda', default=0.0, 
+parser.add_argument('--delta_lambda', type=float, dest='delta_lambda', default=00.0, 
                     help='Longitude of displaced pole')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
@@ -39,35 +40,6 @@ if args.dst_file is '':
 latMin, latMax = -90.0, +90.0
 lonMin, lonMax = 0.0, 360.0
 
-def createCoordAndData(latsPrime, lonsPrime):
-    """
-    Create coordinates and data from axes
-    @param latsPrime latitude logical axis
-    @param lonsPrime longitude logical axis
-    @return curvilinear latitudes, longitudes and data
-    """
-    nj, ni = len(latsPrime), len(lonsPrime)
-    lats = numpy.zeros((nj, ni,), numpy.float64)
-    lons = numpy.zeros((nj, ni,), numpy.float64)
-    data = numpy.zeros((nj, ni,), numpy.float64)
-    for j in range(nj):
-        the = math.pi * (latsPrime[j] - args.delta_theta) / 180.
-        cos_the = math.cos(the)
-        sin_the = math.sin(the)
-        for i in range(ni):
-            lam = math.pi * (lonsPrime[i] - args.delta_lambda) / 180.
-            cos_lam = math.cos(lam)
-            sin_lam = math.sin(lam)
-            x = cos_the * cos_lam
-            y = cos_the * sin_lam
-            z = sin_the
-            rho = math.sqrt(x*x + y*y)
-            lats[j, i] = 180. * math.atan2(z, rho) / math.pi
-            lons[j, i] = 180. * math.atan2(y, x) / math.pi
-            # arbitrary function
-            data[j, i] = math.sin(2*math.pi*lons[j, i]/180.)*numpy.cos(math.pi*lats[j, i]/180.)
-
-    return lats, lons, data
 
 # generate the axes
 srcLatsPrime = numpy.linspace(latMin, latMax, args.src_nj)
@@ -76,8 +48,20 @@ dstLatsPrime = numpy.linspace(latMin, latMax, args.dst_nj)
 dstLonsPrime = numpy.linspace(lonMin, lonMax, args.dst_ni)
 
 # set the curvilinear coords and field
-srcLats, srcLons, srcData = createCoordAndData(srcLatsPrime, srcLonsPrime)
-dstLats, dstLons, dstData = createCoordAndData(dstLatsPrime, dstLonsPrime)
+srcLats, srcLons, srcData = grid_mapper.createCoordAndData(srcLatsPrime, srcLonsPrime, 
+    delta_theta=args.delta_theta, delta_lambda=args.delta_lambda)
+srcLatMin, srcLatMax = min(srcLats.flat), max(srcLats.flat)
+srcLonMin, srcLonMax = min(srcLons.flat), max(srcLons.flat)
+print('src lat: min = {} max = {}'.format(srcLatMin, srcLatMax))
+print('src lon: min = {} max = {}'.format(srcLonMin, srcLonMax))
+
+# target grid is regular lat-lon
+dstLats, dstLons, dstData = grid_mapper.createCoordAndData(dstLatsPrime, dstLonsPrime,
+    delta_theta=0.0, delta_lambda=0.0)
+dstLatMin, dstLatMax = min(dstLats.flat), max(dstLats.flat)
+dstLonMin, dstLonMax = min(dstLons.flat), max(dstLons.flat)
+print('dst lat: min = {} max = {}'.format(dstLatMin, dstLatMax))
+print('dst lon: min = {} max = {}'.format(dstLonMin, dstLonMax))
 
 srcLatCoord = iris.coords.AuxCoord(srcLats, standard_name='latitude', units='degrees_north')
 srcLonCoord = iris.coords.AuxCoord(srcLons, standard_name='longitude', units='degrees_east')
