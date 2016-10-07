@@ -16,9 +16,9 @@ parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=31,
                     help='Destination latitude axis dimension')
 parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=51, 
                     help='Destination longitude axis dimension')
-parser.add_argument('--delta_lat', type=float, dest='delta_lat', default=20.0, 
+parser.add_argument('--delta_lat', type=float, dest='delta_lat', default=30.0, 
                     help='Pole displacement in latitude')
-parser.add_argument('--delta_lon', type=float, dest='delta_lon', default=0.0, 
+parser.add_argument('--delta_lon', type=float, dest='delta_lon', default=20.0, 
                     help='Pole displacement in longitude')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
@@ -38,7 +38,7 @@ if args.dst_file is '':
     sys.exit(1)
 
 latMin, latMax = -90.0, +90.0
-lonMin, lonMax = 0.0, 360.0
+lonMin, lonMax = -180.0, 180.
 
 
 # generate the axes
