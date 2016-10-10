@@ -51,7 +51,7 @@ def createData(filename, prefix):
 
 	coordIds = (c_int * ndims)(latCoordId, lonCoordId)
 	gridId = c_int()
-	ier = pycf.nccf.nccf_def_grid(coordIds, (prefix + "grid").encode('UTF-8'), byref(gridId))
+	ier = pycf.nccf.nccf_def_grid(coordIds, prefix + b"grid", byref(gridId))
 	assert(ier == pycf.NC_NOERR)
 
 	periodicity_lengths = (c_double * ndims)()
