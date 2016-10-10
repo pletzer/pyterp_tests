@@ -1,6 +1,30 @@
 import math
 import numpy
 
+def getCellAreas(lats, lons):
+
+    areas1 = numpy.zeros(lats.shape, numpy.float64)
+    areas2 = numpy.zeros(lats.shape, numpy.float64)
+    
+    v1x = lats[1:, :-1] - lats[:-1, :-1]
+    v1y = lons[1:, :-1] - lons[:-1, :-1]
+
+    v2x = lats[1:, 1:] - lats[1:, :-1]
+    v2y = lons[1:, 1:] - lons[1:, :-1]
+
+    v3x = lats[:-1, 1:] - lats[1:, 1:]
+    v3y = lons[:-1, 1:] - lons[1:, 1:]
+
+    v4x = lats[:-1, :-1] - lats[:-1, 1:]
+    v4y = lons[:-1, :-1] - lons[:-1, 1:]
+
+    areas1[:-1, :-1] = v1x*v2y - v1y*v2x
+    areas2[:-1, :-1] = v3x*v4y - v3y*v4x
+
+    return areas1, areas2
+
+
+
 def createCoordAndData(latsPrime, lonsPrime, **kw):
     """
     Create coordinates and data from axes
@@ -53,5 +77,7 @@ def createCoordAndData(latsPrime, lonsPrime, **kw):
 
             # arbitrary function
             data[j, i] = math.sin(2*math.pi*lons[j, i]/180.)*numpy.cos(math.pi*lats[j, i]/180.)
+
+    # fix the dateline issue. Cells that have negative area must be fixed
 
     return lats, lons, data

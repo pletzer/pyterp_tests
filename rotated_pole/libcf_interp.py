@@ -152,7 +152,7 @@ def plotData(dataId):
 	lats = numpy.ctypeslib.as_array(latPtr, shape=tuple(dims))
 	lons = numpy.ctypeslib.as_array(lonPtr, shape=tuple(dims))
 
-	pylab.pcolor(lats, lons, data)
+	pylab.pcolor(lons, lats, data)
 	pylab.show()
 
 
@@ -187,7 +187,7 @@ assert(ier == pycf.NC_NOERR)
 dstDataRef = getDataAsArray(dstDataId)
 
 # initialize the data
-initializeData(dstDataId, 0.0)
+initializeData(dstDataId, -1.0)
 
 # interpolate
 tic = time.time()
