@@ -8,13 +8,13 @@ import grid_mapper
 iris.FUTURE.netcdf_no_unlimited = True
 
 parser = argparse.ArgumentParser(description='Generate uniform data in 2d')
-parser.add_argument('--src_nj', type=int, dest='src_nj', default=21, 
+parser.add_argument('--src_nj', type=int, dest='src_nj', default=401, 
                     help='Source latitude axis dimension')
-parser.add_argument('--src_ni', type=int, dest='src_ni', default=41, 
+parser.add_argument('--src_ni', type=int, dest='src_ni', default=801, 
                     help='Source longitude axis dimension')
-parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=31, 
+parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=101, 
                     help='Destination latitude axis dimension')
-parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=51, 
+parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=201, 
                     help='Destination longitude axis dimension')
 parser.add_argument('--delta_lat', type=float, dest='delta_lat', default=30.0, 
                     help='Pole displacement in latitude')
@@ -24,6 +24,14 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--dst_lonmin', type=float, dest='dst_lonmin', default=-170.0,
+                    help='Min longitude value on destination grid')
+parser.add_argument('--dst_lonmax', type=float, dest='dst_lonmax', default=170.0,
+                    help='Max longitude value on destination grid')
+parser.add_argument('--dst_latmin', type=float, dest='dst_latmin', default=-85.0,
+                    help='Min latitude value on destination grid')
+parser.add_argument('--dst_latmax', type=float, dest='dst_latmax', default=85.0,
+                    help='Max latitude value on destination grid')
 
 args = parser.parse_args()
 
@@ -44,8 +52,8 @@ lonMin, lonMax = -180.0, 180.
 # generate the axes
 srcLatsPrime = numpy.linspace(latMin, latMax, args.src_nj)
 srcLonsPrime = numpy.linspace(lonMin, lonMax, args.src_ni)
-dstLatsPrime = numpy.linspace(latMin, latMax, args.dst_nj)
-dstLonsPrime = numpy.linspace(lonMin, lonMax, args.dst_ni)
+dstLatsPrime = numpy.linspace(args.dst_latmin, args.dst_latmax, args.dst_nj)
+dstLonsPrime = numpy.linspace(args.dst_lonmin, args.dst_lonmax, args.dst_ni)
 
 # set the curvilinear coords and field
 srcLats, srcLons, srcData = grid_mapper.createCoordAndData(srcLatsPrime, srcLonsPrime, 

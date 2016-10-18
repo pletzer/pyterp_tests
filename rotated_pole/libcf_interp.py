@@ -51,7 +51,7 @@ def createData(filename, prefix):
 
 	coordIds = (c_int * ndims)(latCoordId, lonCoordId)
 	gridId = c_int()
-	ier = pycf.nccf.nccf_def_grid(coordIds, (prefix + "grid").encode('UTF-8'), byref(gridId))
+	ier = pycf.nccf.nccf_def_grid(coordIds, prefix + b"grid", byref(gridId))
 	assert(ier == pycf.NC_NOERR)
 
 	periodicity_lengths = (c_double * ndims)()
@@ -64,6 +64,9 @@ def createData(filename, prefix):
 	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"air_temperature",
                                             read_data, byref(dataId))
 	assert(ier == pycf.NC_NOERR)
+
+	# fix topology
+	#ier = pycf.nccf.nccf_fix_grid_periodic_topology(gridId)
 
 	return gridId, dataId
 
