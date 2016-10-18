@@ -65,7 +65,7 @@ def createData(filename, prefix):
 
 	# create field
 	field = ESMF.Field(grid, name="air_temperature", 
-		               staggerloc=ESMF.StaggerLoc.CORNER)
+		           staggerloc=ESMF.StaggerLoc.CORNER)
 	field.data[...] = cube.data[:]
 
 	nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
@@ -86,10 +86,10 @@ dstDataRef = dstData.data.copy()
 # compute the interpolation weights
 tic = time.time()
 regrid = ESMF.api.regrid.Regrid(srcData, dstData,
-	                            src_mask_values=None, dst_mask_values=None,
-	                            regrid_method=None, pole_method=None, regrid_pole_npoints=None, 
-	                            line_type=None, norm_type=None, unmapped_action=None, 
-	                            ignore_degenerate=None, src_frac_field=None, dst_frac_field=None)
+	                        src_mask_values=None, dst_mask_values=None,
+	                        regrid_method=None, pole_method=None, regrid_pole_npoints=None, 
+	                        line_type=None, norm_type=None, unmapped_action=None, 
+	                        ignore_degenerate=None, src_frac_field=None, dst_frac_field=None)
 timeStats['weights'] = time.time() - tic
 
 # interpolate
@@ -111,6 +111,14 @@ for k, v in timeStats.items():
 	print('\t{0:<32} {1:>.3g} sec'.format(k, v))
 	totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
+
+# plot
+latIndex, lonIndex = 0, 1
+lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+from matplotlib import pylab
+pylab.pcolor(lons, lats, dstData.data)
+pylab.show()
 
 # clean up
 # nothing to do
