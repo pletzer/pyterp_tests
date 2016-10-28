@@ -3,6 +3,9 @@ import argparse
 import iris
 import numpy
 
+iris.FUTURE.netcdf_promote = True
+
+
 parser = argparse.ArgumentParser(description='Plot grid')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')

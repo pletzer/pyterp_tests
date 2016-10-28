@@ -123,18 +123,14 @@ def initializeData(dataId, value):
 	data = numpy.ctypeslib.as_array(dataPtr, shape=tuple(dims))
 	data[...] = value
 
-
-def plotData(dataId):
-	from matplotlib import pylab
+def getGridAndData(dataId):
 	xtypep = c_int()
 	fillValuePtr = c_void_p()
 	gridId = c_int()
 	coordIds = (c_int * ndims)()
-
 	dataPtr = POINTER(c_double)()
 	latPtr = POINTER(c_double)()
 	lonPtr = POINTER(c_double)()
-
 	ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
                                           byref(dataPtr), byref(fillValuePtr))
 	assert(ier == pycf.NC_NOERR)
@@ -149,12 +145,24 @@ def plotData(dataId):
 	assert(ier == pycf.NC_NOERR)
 	ier = pycf.nccf.nccf_get_coord_data_pointer(coordIds[1], byref(lonPtr))
 	assert(ier == pycf.NC_NOERR)
-
 	ntot, dims = inquireDataSizes(dataId)
 	data = numpy.ctypeslib.as_array(dataPtr, shape=tuple(dims))
 	lats = numpy.ctypeslib.as_array(latPtr, shape=tuple(dims))
 	lons = numpy.ctypeslib.as_array(lonPtr, shape=tuple(dims))
 
+	return lats, lons, data
+
+
+def printInvalidDataPoints(dataId, fillValue):
+	lats, lons, data = getGridAndData(dataId)
+	badLats = lats[data == fillValue]
+	badLons = lons[data == fillValue]
+	for i in range(len(badLats)):
+		print('invalid point: lat = {:.10f} lon = {:.10f}'.format(badLats[i], badLons[i]))
+
+def plotData(dataId):
+	from matplotlib import pylab
+	lats, lons, data = getGridAndData(dataId)
 	pylab.pcolor(lons, lats, data)
 	pylab.show()
 
@@ -190,7 +198,7 @@ assert(ier == pycf.NC_NOERR)
 dstDataRef = getDataAsArray(dstDataId)
 
 # initialize the data
-initializeData(dstDataId, -1.0)
+initializeData(dstDataId, -2.0)
 
 # interpolate
 tic = time.time()
@@ -212,6 +220,9 @@ print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
 ninvalid = dstNtot - nvalid.value
 print('\t     # invalid points: {} ({:.3f}%)'.format(ninvalid,
 	                                           100*ninvalid/float(dstNtot)))
+
+printInvalidDataPoints(dstDataId, fillValue=-2.0)
+
 
 print('interpolation error: {:.3g}'.format(error))
 print('time stats:')

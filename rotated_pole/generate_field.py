@@ -24,13 +24,13 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
-parser.add_argument('--dst_lonmin', type=float, dest='dst_lonmin', default=-170.0,
+parser.add_argument('--dst_lonmin', type=float, dest='dst_lonmin', default=-176.0,
                     help='Min longitude value on destination grid')
-parser.add_argument('--dst_lonmax', type=float, dest='dst_lonmax', default=170.0,
+parser.add_argument('--dst_lonmax', type=float, dest='dst_lonmax', default=176.0,
                     help='Max longitude value on destination grid')
-parser.add_argument('--dst_latmin', type=float, dest='dst_latmin', default=-85.0,
+parser.add_argument('--dst_latmin', type=float, dest='dst_latmin', default=-86.0,
                     help='Min latitude value on destination grid')
-parser.add_argument('--dst_latmax', type=float, dest='dst_latmax', default=85.0,
+parser.add_argument('--dst_latmax', type=float, dest='dst_latmax', default=86.0,
                     help='Max latitude value on destination grid')
 
 args = parser.parse_args()

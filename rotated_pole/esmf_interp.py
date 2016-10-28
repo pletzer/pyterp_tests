@@ -82,7 +82,7 @@ dstGrid, dstData, dstNodeDims = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.data.copy()
-dstData.data[...] = 0
+dstData.data[...] = -1
 
 # compute the interpolation weights
 tic = time.time()
