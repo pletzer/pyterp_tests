@@ -56,16 +56,19 @@ dstLatsPrime = numpy.linspace(args.dst_latmin, args.dst_latmax, args.dst_nj)
 dstLonsPrime = numpy.linspace(args.dst_lonmin, args.dst_lonmax, args.dst_ni)
 
 # set the curvilinear coords and field
-srcLats, srcLons, srcData = grid_mapper.createCoordAndData(srcLatsPrime, srcLonsPrime, 
-    delta_lat=args.delta_lat, delta_lon=args.delta_lon)
+srcLats, srcLons = grid_mapper.createCoords(srcLatsPrime, srcLonsPrime, 
+                                            delta_lat=args.delta_lat,
+                                            delta_lon=args.delta_lon)
+srcData = grid_mapper.createPointData(srcLats, srcLons)
 srcLatMin, srcLatMax = min(srcLats.flat), max(srcLats.flat)
 srcLonMin, srcLonMax = min(srcLons.flat), max(srcLons.flat)
 print('src lat: min = {} max = {}'.format(srcLatMin, srcLatMax))
 print('src lon: min = {} max = {}'.format(srcLonMin, srcLonMax))
 
 # target grid is regular lat-lon
-dstLats, dstLons, dstData = grid_mapper.createCoordAndData(dstLatsPrime, dstLonsPrime,
-    delta_lat=0.0, delta_lon=0.0)
+dstLats, dstLons = grid_mapper.createCoords(dstLatsPrime, dstLonsPrime,
+                                            delta_lat=0.0, delta_lon=0.0)
+dstData = grid_mapper.createPointData(dstLats, dstLons)
 dstLatMin, dstLatMax = min(dstLats.flat), max(dstLats.flat)
 dstLonMin, dstLonMax = min(dstLons.flat), max(dstLons.flat)
 print('dst lat: min = {} max = {}'.format(dstLatMin, dstLatMax))

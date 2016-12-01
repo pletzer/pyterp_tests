@@ -25,9 +25,9 @@ def getCellAreas(lats, lons):
 
 
 
-def createCoordAndData(latsPrime, lonsPrime, **kw):
+def createCoords(latsPrime, lonsPrime, **kw):
     """
-    Create coordinates and data from axes
+    Create coordinates from axes
     @param latsPrime latitude logical axis
     @param lonsPrime longitude logical axis
     @return curvilinear latitudes, longitudes and data
@@ -38,7 +38,6 @@ def createCoordAndData(latsPrime, lonsPrime, **kw):
     nj, ni = len(latsPrime), len(lonsPrime)
     lats = numpy.zeros((nj, ni,), numpy.float64)
     lons = numpy.zeros((nj, ni,), numpy.float64)
-    data = numpy.zeros((nj, ni,), numpy.float64)
 
     alpha = math.pi * delta_lat / 180.
     beta = math.pi * delta_lon / 180.
@@ -75,9 +74,22 @@ def createCoordAndData(latsPrime, lonsPrime, **kw):
             lats[j, i] = 180. * math.asin(xyz[2]) / math.pi
             lons[j, i] = 180. * math.atan2(xyz[1], xyz[0]) / math.pi
 
+    # fix the dateline issue. Cells that have negative area must be fixed
+
+    return lats, lons
+
+def createPointData(lats, lons):
+    """
+    Create data from curvilinear coordinates
+    @param lats 2D latitude data
+    @param lons 2D longitude data
+    @return data
+    """
+    nj, ni = lats.shape
+    data = numpy.zeros(lats.shape, numpy.float64)
+    for j in range(nj):
+        for i in range(ni):
             # arbitrary function
             data[j, i] = math.sin(2*math.pi*lons[j, i]/180.)*numpy.cos(math.pi*lats[j, i]/180.)
 
-    # fix the dateline issue. Cells that have negative area must be fixed
-
-    return lats, lons, data
+    return data
