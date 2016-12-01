@@ -37,11 +37,11 @@ def plotGrid(cube, lineType='k--'):
 	lats = coords[0].points
 	lons = coords[1].points
 	nj, ni = lats.shape
-	for j in range(nj):
+	for j in range(0, nj, nj//20):
 		y = lats[j, :]
 		x = lons[j, :]
 		pylab.plot(x, y, lineType)
-	for i in range(ni):
+	for i in range(0, ni, ni//20):
 		y = lats[:, i]
 		x = lons[:, i]
 		pylab.plot(x, y, lineType)
@@ -49,7 +49,7 @@ def plotGrid(cube, lineType='k--'):
 
 srcCube = iris.load_cube(args.src_file, 'air_temperature')
 dstCube = iris.load_cube(args.dst_file, 'air_temperature')
-plotCellAreas(srcCube)
+#plotCellAreas(srcCube)
 plotGrid(srcCube, 'g-')
 plotGrid(dstCube, 'r-')
 
