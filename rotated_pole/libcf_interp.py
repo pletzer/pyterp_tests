@@ -61,7 +61,7 @@ def createData(filename, prefix):
 
 	dataId = c_int()
 	read_data = 1
-	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"air_temperature",
+	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"nodal",
                                             read_data, byref(dataId))
 	assert(ier == pycf.NC_NOERR)
 

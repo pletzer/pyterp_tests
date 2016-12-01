@@ -80,7 +80,7 @@ def createCoords(latsPrime, lonsPrime, **kw):
 
 def createPointData(lats, lons):
     """
-    Create data from curvilinear coordinates
+    Create nodal data from curvilinear coordinates
     @param lats 2D latitude data
     @param lons 2D longitude data
     @return data
@@ -91,5 +91,31 @@ def createPointData(lats, lons):
         for i in range(ni):
             # arbitrary function
             data[j, i] = math.sin(2*math.pi*lons[j, i]/180.)*numpy.cos(math.pi*lats[j, i]/180.)
+
+    return data
+
+def createCellData(lats, lons):
+    """
+    Create zonal data from curvilinear coordinates
+    @param lats 2D latitude data
+    @param lons 2D longitude data
+    @return data
+    """
+    nj, ni = lats.shape
+    data = numpy.zeros((nj - 1, ni - 1), numpy.float64)
+    for j in range(nj - 1):
+        for i in range(ni - 1):
+            # mid point
+            midLon = 0.25*(lons[j + 0, i + 0] + 
+                           lons[j + 0, i + 1] + 
+                           lons[j + 1, i + 1] + 
+                           lons[j + 1, i + 0])
+            midLat = 0.25*(lats[j + 0, i + 0] + 
+                           lats[j + 0, i + 1] + 
+                           lats[j + 1, i + 1] + 
+                           lats[j + 1, i + 0])
+
+            # arbitrary function
+            data[j, i] = math.sin(2*math.pi*midLon/180.)*numpy.cos(math.pi*midLat/180.)
 
     return data
