@@ -99,23 +99,28 @@ def createCellData(lats, lons):
     Create zonal data from curvilinear coordinates
     @param lats 2D latitude data
     @param lons 2D longitude data
-    @return data
+    @return latCells, lonCells, data
     """
     nj, ni = lats.shape
-    data = numpy.zeros((nj - 1, ni - 1), numpy.float64)
-    for j in range(nj - 1):
-        for i in range(ni - 1):
+    njM1 , niM1 = nj - 1, ni - 1
+    latCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
+    lonCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
+    data = numpy.zeros((njM1, niM1), numpy.float64)
+    for j in range(njM1):
+        for i in range(niM1):
+            latCells[j, i, :] = lats[j + 0, i + 0], \
+                                lats[j + 0, i + 1], \
+                                lats[j + 1, i + 1], \
+                                lats[j + 1, i + 0]
+            lonCells[j, i, :] = lons[j + 0, i + 0], \
+                                lons[j + 0, i + 1], \
+                                lons[j + 1, i + 1], \
+                                lons[j + 1, i + 0]
             # mid point
-            midLon = 0.25*(lons[j + 0, i + 0] + 
-                           lons[j + 0, i + 1] + 
-                           lons[j + 1, i + 1] + 
-                           lons[j + 1, i + 0])
-            midLat = 0.25*(lats[j + 0, i + 0] + 
-                           lats[j + 0, i + 1] + 
-                           lats[j + 1, i + 1] + 
-                           lats[j + 1, i + 0])
+            midLat = 0.25*latCells.sum()
+            midLon = 0.25*lonCells.sum()
 
             # arbitrary function
             data[j, i] = math.sin(2*math.pi*midLon/180.)*numpy.cos(math.pi*midLat/180.)
 
-    return data
+    return latCells, lonCells, data
