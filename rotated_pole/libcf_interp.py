@@ -8,9 +8,9 @@ from functools import reduce
 import time
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
-parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
+parser.add_argument('--src_file', type=str, dest='src_file', default='point_src.nc',
                     help='Source data file name')
-parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
+parser.add_argument('--dst_file', type=str, dest='dst_file', default='point_dst.nc',
                     help='Destination data file name')
 parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-8,
 	                help='Tolerance in target space')
@@ -61,7 +61,7 @@ def createData(filename, prefix):
 
 	dataId = c_int()
 	read_data = 1
-	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"nodal",
+	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"pointData",
                                             read_data, byref(dataId))
 	assert(ier == pycf.NC_NOERR)
 
