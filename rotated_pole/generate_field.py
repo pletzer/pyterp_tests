@@ -88,34 +88,42 @@ dstLonMin, dstLonMax = min(dstLons.flat), max(dstLons.flat)
 print('dst lat: min = {} max = {}'.format(dstLatMin, dstLatMax))
 print('dst lon: min = {} max = {}'.format(dstLonMin, dstLonMax))
 
-srcPointCube = iris.cube.Cube(srcPointData, var_name='pointData', standard_name='air_temperature', cell_methods=None)
-srcLatCoord = iris.coords.AuxCoord(srcLats, standard_name='latitude', units='degrees_north')
-srcLonCoord = iris.coords.AuxCoord(srcLons, standard_name='longitude', units='degrees_east')
+srcPointCube = iris.cube.Cube(srcPointData, var_name='pointData', 
+                              standard_name='air_temperature', cell_methods=None)
+srcLatCoord = iris.coords.AuxCoord(srcLats, var_name='lat', standard_name='latitude', units='degrees_north')
+srcLonCoord = iris.coords.AuxCoord(srcLons, var_name='lon', standard_name='longitude', units='degrees_east')
 srcPointCube.add_aux_coord(srcLatCoord, data_dims=(0, 1))
 srcPointCube.add_aux_coord(srcLonCoord, data_dims=(0, 1))
 srcCellCube = iris.cube.Cube(srcCellData, var_name='cellData', standard_name='air_temperature')
 srcLatBounds, srcLatMid = createBoundsArray(srcLats)
 srcLonBounds, srcLonMid = createBoundsArray(srcLons)
-srcCellAuxLat = iris.coords.AuxCoord(srcLatMid, var_name='latMid', standard_name='latitude', bounds=srcLatBounds)
-srcCellAuxLon = iris.coords.AuxCoord(srcLonMid, var_name='lonMid', standard_name='longitude', bounds=srcLonBounds)
+srcCellAuxLat = iris.coords.AuxCoord(srcLatMid, var_name='latMid', 
+                                     standard_name='latitude', units='degrees_north', bounds=srcLatBounds)
+srcCellAuxLon = iris.coords.AuxCoord(srcLonMid, var_name='lonMid', 
+                                     standard_name='longitude', units='degrees_east', bounds=srcLonBounds)
 srcCellCube.add_aux_coord(srcCellAuxLat, data_dims=(0, 1))
 srcCellCube.add_aux_coord(srcCellAuxLon, data_dims=(0, 1))
 
-dstPointCube = iris.cube.Cube(dstPointData, var_name='pointData', standard_name='air_temperature', cell_methods=None)
-dstLatCoord = iris.coords.AuxCoord(dstLats, standard_name='latitude', units='degrees_north')
-dstLonCoord = iris.coords.AuxCoord(dstLons, standard_name='longitude', units='degrees_east')
+dstPointCube = iris.cube.Cube(dstPointData, var_name='pointData', 
+                              standard_name='air_temperature', cell_methods=None)
+dstLatCoord = iris.coords.AuxCoord(dstLats, var_name='lat', 
+                                   standard_name='latitude', units='degrees_north')
+dstLonCoord = iris.coords.AuxCoord(dstLons, var_name='lon', 
+                                   standard_name='longitude', units='degrees_east')
 dstPointCube.add_aux_coord(dstLatCoord, data_dims=(0, 1))
 dstPointCube.add_aux_coord(dstLonCoord, data_dims=(0, 1))
 dstCellCube = iris.cube.Cube(dstCellData, var_name='cellData', standard_name='air_temperature')
 dstLatBounds, dstLatMid = createBoundsArray(dstLats)
 dstLonBounds, dstLonMid = createBoundsArray(dstLons)
-dstCellAuxLat = iris.coords.AuxCoord(dstLatMid, var_name='latMid', standard_name='latitude', bounds=dstLatBounds)
-dstCellAuxLon = iris.coords.AuxCoord(dstLonMid, var_name='lonMid', standard_name='longitude', bounds=dstLonBounds)
+dstCellAuxLat = iris.coords.AuxCoord(dstLatMid, var_name='latMid', 
+                                     standard_name='latitude', units='degrees_north', bounds=dstLatBounds)
+dstCellAuxLon = iris.coords.AuxCoord(dstLonMid, var_name='lonMid', 
+                                     standard_name='longitude', units='degrees_east', bounds=dstLonBounds)
 dstCellCube.add_aux_coord(dstCellAuxLat, data_dims=(0, 1))
 dstCellCube.add_aux_coord(dstCellAuxLon, data_dims=(0, 1))
 
 # save the result
-iris.save(srcPointCube, 'point_' + args.src_file)
-iris.save(srcCellCube, 'cell_' + args.src_file)
-iris.save(dstPointCube, 'point_' + args.dst_file)
-iris.save(dstCellCube, 'cell_' + args.dst_file)
+srcCubes = iris.cube.CubeList([srcPointCube, srcCellCube])
+iris.save(srcCubes, args.src_file)
+dstCubes = iris.cube.CubeList([dstPointCube, dstCellCube])
+iris.save(dstCubes, args.dst_file)
