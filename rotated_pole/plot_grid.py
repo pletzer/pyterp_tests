@@ -7,9 +7,9 @@ iris.FUTURE.netcdf_promote = True
 
 
 parser = argparse.ArgumentParser(description='Plot grid')
-parser.add_argument('--src_file', type=str, dest='src_file', default='point_src.nc',
+parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
-parser.add_argument('--dst_file', type=str, dest='dst_file', default='point_dst.nc',
+parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
 
 args = parser.parse_args()

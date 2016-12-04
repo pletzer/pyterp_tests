@@ -17,6 +17,47 @@ def createBoundsArray(arr):
     midArray = 0.25 * (arr[:-1, :-1] + arr[:-1, 1:] + arr[1:, 1:] + arr[1:, :-1])
     return arrBounds, midArray
 
+def generateCoordsAndData(nj, ni, delta_lat, delta_lon, 
+                         latMin, latMax, lonMin, lonMax):
+    """
+    Generate coordinate and point/cell data
+    @param nj number of latitudes
+    @param ni number of longitudes
+    @param delta_lat rotated pole shift in latitude
+    @param delta_lon rotated pole shift in longitude
+    @return CubeList object containing point and cell data
+    """
+
+    # generate the axes
+    latsPrime = numpy.linspace(latMin, latMax, nj)
+    lonsPrime = numpy.linspace(lonMin, lonMax, ni)
+
+    # set the curvilinear coords and field
+    lats, lons = grid_mapper.createCoords(latsPrime, lonsPrime, 
+                                          delta_lat=delta_lat,
+                                          delta_lon=delta_lon)
+    pointData = grid_mapper.createPointData(lats, lons)
+    latCells, lonCells, cellData = grid_mapper.createCellData(lats, lons)
+
+    pointCube = iris.cube.Cube(pointData, var_name='pointData', 
+                               standard_name='air_temperature', cell_methods=None)
+    latCoord = iris.coords.AuxCoord(lats, var_name='lat', standard_name='latitude', units='degrees_north')
+    lonCoord = iris.coords.AuxCoord(lons, var_name='lon', standard_name='longitude', units='degrees_east')
+    pointCube.add_aux_coord(latCoord, data_dims=(0, 1))
+    pointCube.add_aux_coord(lonCoord, data_dims=(0, 1))
+    
+    cellCube = iris.cube.Cube(cellData, var_name='cellData', standard_name='air_temperature')
+    latBounds, latMid = createBoundsArray(lats)
+    lonBounds, lonMid = createBoundsArray(lons)
+    cellAuxLat = iris.coords.AuxCoord(latMid, var_name='latMid', 
+                                      standard_name='latitude', units='degrees_north', bounds=latBounds)
+    cellAuxLon = iris.coords.AuxCoord(lonMid, var_name='lonMid', 
+                                      standard_name='longitude', units='degrees_east', bounds=lonBounds)
+    cellCube.add_aux_coord(cellAuxLat, data_dims=(0, 1))
+    cellCube.add_aux_coord(cellAuxLon, data_dims=(0, 1))
+
+    return iris.cube.CubeList([pointCube, cellCube])
+
 parser = argparse.ArgumentParser(description='Generate uniform data in 2d')
 parser.add_argument('--src_nj', type=int, dest='src_nj', default=101, 
                     help='Source latitude axis dimension')
@@ -55,75 +96,12 @@ if args.dst_file is '':
     parser.print_help()
     sys.exit(1)
 
-latMin, latMax = -90.0, +90.0
-lonMin, lonMax = -180.0, 180.
-
-
-# generate the axes
-srcLatsPrime = numpy.linspace(latMin, latMax, args.src_nj)
-srcLonsPrime = numpy.linspace(lonMin, lonMax, args.src_ni)
-dstLatsPrime = numpy.linspace(args.dst_latmin, args.dst_latmax, args.dst_nj)
-dstLonsPrime = numpy.linspace(args.dst_lonmin, args.dst_lonmax, args.dst_ni)
-
-# set the curvilinear coords and field
-srcLats, srcLons = grid_mapper.createCoords(srcLatsPrime, srcLonsPrime, 
-                                            delta_lat=args.delta_lat,
-                                            delta_lon=args.delta_lon)
-srcPointData = grid_mapper.createPointData(srcLats, srcLons)
-srcLatCells, srcLonCells, srcCellData = grid_mapper.createCellData(srcLats, srcLons)
-
-srcLatMin, srcLatMax = min(srcLats.flat), max(srcLats.flat)
-srcLonMin, srcLonMax = min(srcLons.flat), max(srcLons.flat)
-print('src lat: min = {} max = {}'.format(srcLatMin, srcLatMax))
-print('src lon: min = {} max = {}'.format(srcLonMin, srcLonMax))
-
-# target grid is regular lat-lon
-dstLats, dstLons = grid_mapper.createCoords(dstLatsPrime, dstLonsPrime,
-                                            delta_lat=0.0, delta_lon=0.0)
-dstPointData = grid_mapper.createPointData(dstLats, dstLons)
-dstLatCells, dstLonCells, dstCellData = grid_mapper.createCellData(dstLats, dstLons)
-
-dstLatMin, dstLatMax = min(dstLats.flat), max(dstLats.flat)
-dstLonMin, dstLonMax = min(dstLons.flat), max(dstLons.flat)
-print('dst lat: min = {} max = {}'.format(dstLatMin, dstLatMax))
-print('dst lon: min = {} max = {}'.format(dstLonMin, dstLonMax))
-
-srcPointCube = iris.cube.Cube(srcPointData, var_name='pointData', 
-                              standard_name='air_temperature', cell_methods=None)
-srcLatCoord = iris.coords.AuxCoord(srcLats, var_name='lat', standard_name='latitude', units='degrees_north')
-srcLonCoord = iris.coords.AuxCoord(srcLons, var_name='lon', standard_name='longitude', units='degrees_east')
-srcPointCube.add_aux_coord(srcLatCoord, data_dims=(0, 1))
-srcPointCube.add_aux_coord(srcLonCoord, data_dims=(0, 1))
-srcCellCube = iris.cube.Cube(srcCellData, var_name='cellData', standard_name='air_temperature')
-srcLatBounds, srcLatMid = createBoundsArray(srcLats)
-srcLonBounds, srcLonMid = createBoundsArray(srcLons)
-srcCellAuxLat = iris.coords.AuxCoord(srcLatMid, var_name='latMid', 
-                                     standard_name='latitude', units='degrees_north', bounds=srcLatBounds)
-srcCellAuxLon = iris.coords.AuxCoord(srcLonMid, var_name='lonMid', 
-                                     standard_name='longitude', units='degrees_east', bounds=srcLonBounds)
-srcCellCube.add_aux_coord(srcCellAuxLat, data_dims=(0, 1))
-srcCellCube.add_aux_coord(srcCellAuxLon, data_dims=(0, 1))
-
-dstPointCube = iris.cube.Cube(dstPointData, var_name='pointData', 
-                              standard_name='air_temperature', cell_methods=None)
-dstLatCoord = iris.coords.AuxCoord(dstLats, var_name='lat', 
-                                   standard_name='latitude', units='degrees_north')
-dstLonCoord = iris.coords.AuxCoord(dstLons, var_name='lon', 
-                                   standard_name='longitude', units='degrees_east')
-dstPointCube.add_aux_coord(dstLatCoord, data_dims=(0, 1))
-dstPointCube.add_aux_coord(dstLonCoord, data_dims=(0, 1))
-dstCellCube = iris.cube.Cube(dstCellData, var_name='cellData', standard_name='air_temperature')
-dstLatBounds, dstLatMid = createBoundsArray(dstLats)
-dstLonBounds, dstLonMid = createBoundsArray(dstLons)
-dstCellAuxLat = iris.coords.AuxCoord(dstLatMid, var_name='latMid', 
-                                     standard_name='latitude', units='degrees_north', bounds=dstLatBounds)
-dstCellAuxLon = iris.coords.AuxCoord(dstLonMid, var_name='lonMid', 
-                                     standard_name='longitude', units='degrees_east', bounds=dstLonBounds)
-dstCellCube.add_aux_coord(dstCellAuxLat, data_dims=(0, 1))
-dstCellCube.add_aux_coord(dstCellAuxLon, data_dims=(0, 1))
-
 # save the result
-srcCubes = iris.cube.CubeList([srcPointCube, srcCellCube])
+srcCubes = generateCoordsAndData(args.src_nj, args.src_ni, args.delta_lat, args.delta_lon,
+                                 latMin=-90.0, latMax=90.0,
+                                 lonMin=0.0, lonMax=360.0)
 iris.save(srcCubes, args.src_file)
-dstCubes = iris.cube.CubeList([dstPointCube, dstCellCube])
+dstCubes = generateCoordsAndData(args.dst_nj, args.dst_ni, delta_lat=0.0, delta_lon=0.0,
+                                 latMin=args.dst_latmin, latMax=args.dst_latmax,
+                                 lonMin=args.dst_lonmin, lonMax=args.dst_lonmax)
 iris.save(dstCubes, args.dst_file)
