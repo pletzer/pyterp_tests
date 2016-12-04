@@ -18,13 +18,13 @@ def createBoundsArray(arr):
     return arrBounds, midArray
 
 parser = argparse.ArgumentParser(description='Generate uniform data in 2d')
-parser.add_argument('--src_nj', type=int, dest='src_nj', default=401, 
+parser.add_argument('--src_nj', type=int, dest='src_nj', default=101, 
                     help='Source latitude axis dimension')
-parser.add_argument('--src_ni', type=int, dest='src_ni', default=801, 
+parser.add_argument('--src_ni', type=int, dest='src_ni', default=201, 
                     help='Source longitude axis dimension')
-parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=101, 
+parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=21, 
                     help='Destination latitude axis dimension')
-parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=201, 
+parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=41, 
                     help='Destination longitude axis dimension')
 parser.add_argument('--delta_lat', type=float, dest='delta_lat', default=30.0, 
                     help='Pole displacement in latitude')
@@ -96,8 +96,8 @@ srcPointCube.add_aux_coord(srcLonCoord, data_dims=(0, 1))
 srcCellCube = iris.cube.Cube(srcCellData, var_name='cellData', standard_name='air_temperature')
 srcLatBounds, srcLatMid = createBoundsArray(srcLats)
 srcLonBounds, srcLonMid = createBoundsArray(srcLons)
-srcCellAuxLat = iris.coords.AuxCoord(srcLatMid, var_name='srcLatMid', standard_name='latitude', bounds=srcLatBounds)
-srcCellAuxLon = iris.coords.AuxCoord(srcLonMid, var_name='srcLonMid', standard_name='longitude', bounds=srcLonBounds)
+srcCellAuxLat = iris.coords.AuxCoord(srcLatMid, var_name='latMid', standard_name='latitude', bounds=srcLatBounds)
+srcCellAuxLon = iris.coords.AuxCoord(srcLonMid, var_name='lonMid', standard_name='longitude', bounds=srcLonBounds)
 srcCellCube.add_aux_coord(srcCellAuxLat, data_dims=(0, 1))
 srcCellCube.add_aux_coord(srcCellAuxLon, data_dims=(0, 1))
 
@@ -109,13 +109,13 @@ dstPointCube.add_aux_coord(dstLonCoord, data_dims=(0, 1))
 dstCellCube = iris.cube.Cube(dstCellData, var_name='cellData', standard_name='air_temperature')
 dstLatBounds, dstLatMid = createBoundsArray(dstLats)
 dstLonBounds, dstLonMid = createBoundsArray(dstLons)
-dstCellAuxLat = iris.coords.AuxCoord(dstLatMid, var_name='dstLatMid', standard_name='latitude', bounds=dstLatBounds)
-dstCellAuxLon = iris.coords.AuxCoord(dstLonMid, var_name='dstLonMid', standard_name='longitude', bounds=dstLonBounds)
+dstCellAuxLat = iris.coords.AuxCoord(dstLatMid, var_name='latMid', standard_name='latitude', bounds=dstLatBounds)
+dstCellAuxLon = iris.coords.AuxCoord(dstLonMid, var_name='lonMid', standard_name='longitude', bounds=dstLonBounds)
 dstCellCube.add_aux_coord(dstCellAuxLat, data_dims=(0, 1))
 dstCellCube.add_aux_coord(dstCellAuxLon, data_dims=(0, 1))
 
 # save the result
-iris.save(srcPointCube, args.src_file)
-iris.save(srcCellCube, args.src_file)
-iris.save(dstPointCube, args.dst_file)
-iris.save(dstCellCube, args.dst_file)
+iris.save(srcPointCube, 'point_' + args.src_file)
+iris.save(srcCellCube, 'cell_' + args.src_file)
+iris.save(dstPointCube, 'point_' + args.dst_file)
+iris.save(dstCellCube, 'cell_' + args.dst_file)
