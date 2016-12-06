@@ -24,7 +24,8 @@ src_celldims = [(10, 20),
                 (20, 40),
                 (40, 80),
                 (80, 160),
-                (160, 320)]
+                (160, 320),
+                (320, 640)]
 
 
 ns = []
@@ -33,9 +34,6 @@ libcf_weights = []
 esmf_eval = []
 esmf_weights = []
 for srcDims in src_celldims:
-	srcNodeDimsStr = '"{0},{1}"'.format(srcDims[0] + 1, srcDims[1] + 1)
-	dstNodeDimsStr = '"{0},{1}"'.format(srcDims[0]//2 + 1, srcDims[1]//2 + 1)
-
 	# generate the grids
 	dstDims = (srcDims[0]//2, srcDims[1]//2)
 	call(['python', 'generate_field.py', \
@@ -65,7 +63,9 @@ for srcDims in src_celldims:
 	out.close()
 	libcf_eval.append(getEvaluationTime('log.txt'))
 	libcf_weights.append(getWeightsTime('log.txt'))
-	assert(getNumberOfInvalidPoints('log.txt') == 0)
+	numFails = getNumberOfInvalidPoints('log.txt')
+	if numFails != 0:
+		print('*** {} libcf interp failures'.format(numFails))
 
 
 from matplotlib import pylab
