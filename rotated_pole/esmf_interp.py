@@ -127,8 +127,8 @@ latIndex, lonIndex = 0, 1
 lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 from matplotlib import pylab
-pylab.pcolor(lons, lats, dstData.data)
-pylab.show()
+#pylab.pcolor(lons, lats, dstData.data)
+#pylab.show()
 
 # clean up
 # nothing to do

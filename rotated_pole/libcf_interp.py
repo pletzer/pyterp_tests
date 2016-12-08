@@ -232,7 +232,7 @@ for k, v in timeStats.items():
     totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
-plotData(dstDataId)
+#plotData(dstDataId)
 
 # clean up
 destroyData(srcDataId)
