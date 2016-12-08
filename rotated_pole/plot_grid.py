@@ -47,8 +47,18 @@ def plotGrid(cube, lineType='k--'):
 		pylab.plot(x, y, lineType)
 
 
-srcCube = iris.load_cube(args.src_file, 'air_temperature')
-dstCube = iris.load_cube(args.dst_file, 'air_temperature')
+srcCubes = iris.load(args.src_file)
+srcCube = None
+for cb in srcCubes:
+    if cb.var_name == 'pointData':
+        srcCube = cb
+
+dstCubes = iris.load(args.dst_file)
+dstCube = None
+for cb in dstCubes:
+    if cb.var_name == 'pointData':
+        dstCube = cb
+
 #plotCellAreas(srcCube)
 plotGrid(srcCube, 'g-')
 plotGrid(dstCube, 'r-')
