@@ -1,6 +1,8 @@
 import ESMF
 import numpy
 
+esmpy = ESMF.Manager(debug=True)
+
 def create2DLats(nodeDims, latAxis):
     """
     Create a 2d latitude coordinate from a 1d axis

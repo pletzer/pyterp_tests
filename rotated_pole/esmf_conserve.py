@@ -3,7 +3,6 @@ import ESMF
 import iris
 import numpy
 import sys
-from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
 import argparse
 from functools import reduce
 import time
@@ -38,17 +37,15 @@ def createData(filename, prefix):
     # then pass the array to the ESMF API
     cubes = iris.load(filename)
     cubePoint, cubeCell = None, None
+    # find the point and cell cubes
     for cb in cubes:
         if cb.var_name == 'pointData':
             cubePoint = cb
         if cb.var_name == 'cellData':
             cubeCell = cb
     coordsPoint = cubePoint.coords()
-    coordsCell = cubeCell.coords()
     latsPoint = coordsPoint[0].points
     lonsPoint = coordsPoint[1].points
-    latsCell = coordsCell[0].points
-    lonsCell = coordsCell[1].points
     
     # create the ESMF grid object
 
@@ -59,14 +56,8 @@ def createData(filename, prefix):
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
 
-    #grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER, coord_dim=latIndex)
-    #grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER, coord_dim=lonIndex)
-
     coordLatPoint = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
     coordLonPoint = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-
-    #coordLatCell = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CENTER)
-    #coordLonCell = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CENTER)
 
     # get the local start/end index sets and set the point coordinates
     iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
@@ -76,19 +67,11 @@ def createData(filename, prefix):
     coordLatPoint[...] = latsPoint[iBegLat:iEndLat, iBegLon:iEndLon]
     coordLonPoint[...] = lonsPoint[iBegLat:iEndLat, iBegLon:iEndLon]
 
+    # local sizes
     nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
 
-    # get the local start/end index sets and set the cell coordinates
-    #iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CENTER][latIndex]
-    #iEndLat = grid.upper_bounds[ESMF.StaggerLoc.CENTER][latIndex]
-    #iBegLon = grid.lower_bounds[ESMF.StaggerLoc.CENTER][lonIndex]
-    #iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CENTER][lonIndex]
-    #coordLatCell[...] = latsCell[iBegLat:iEndLat, iBegLon:iEndLon]
-    #coordLonCell[...] = lonsCell[iBegLat:iEndLat, iBegLon:iEndLon]
-
     # create and set the field
-    field = ESMF.Field(grid, name="air_temperature", 
-                       staggerloc=ESMF.StaggerLoc.CENTER)
+    field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
     field.data[...] = cubeCell.data[:]
 
     return grid, field, nodeDims
@@ -122,9 +105,8 @@ timeStats['weights'] = time.time() - tic
 # interpolate
 tic = time.time()
 #print('ooo dstDataRef = {}'.format(dstDataRef))
-print('--- dstData.data = {}'.format(dstData.data))
 regrid(srcData, dstData)
-#print('+++ dstData.data = {}'.format(dstData.data))
+print('+++ dstData.data = {}'.format(dstData.data))
 
 timeStats['evaluation'] = time.time() - tic
 
@@ -150,6 +132,3 @@ lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CENTER)
 from matplotlib import pylab
 pylab.pcolor(lons, lats, dstData.data)
 pylab.show()
-
-# clean up
-# nothing to do

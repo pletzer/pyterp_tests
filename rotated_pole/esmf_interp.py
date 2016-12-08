@@ -3,7 +3,6 @@ import ESMF
 import iris
 import numpy
 import sys
-from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
 import argparse
 from functools import reduce
 import time
