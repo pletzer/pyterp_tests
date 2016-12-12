@@ -92,6 +92,7 @@ def plotField(field):
 
 # set the src/dst grid dimensions
 srcPointDims = (10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
+#srcPointDims = (100 + 1, 200 + 1)
 dstPointDims = (5 + 1, 10 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)
@@ -115,12 +116,15 @@ srcField = createField(srcGrid, 'src', srcData)
 dstData = numpy.zeros(dstCellDims, numpy.float64) # initializing the dst field to zero
 dstField = createField(dstGrid, 'dst', dstData)
 
+# set the field initially to some bad values
+dstField.data[...] = -1000.0
+
 plotField(srcField)
 
 # compute the interpolation weights
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
-                     unmapped_action=ESMF.api.constants.UnmappedAction.ERROR)
+                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
 #regrid
 regrid(srcField, dstField)
 
