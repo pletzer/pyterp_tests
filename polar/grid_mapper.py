@@ -33,11 +33,11 @@ def createCoords(rho, the, **kw):
     @return curvilinear y and x
     """
     nr, nt = len(rho), len(the)
-    rr = numpy.outer(rho, numpy.zeros((nt,), numpy.float64))
-    tt = numpy.outer(numpy.zeros((nr,), numpy.float64), the)
+    rr = numpy.outer(rho, numpy.ones((nt,), numpy.float64))
+    tt = numpy.outer(numpy.ones((nr,), numpy.float64), the)
     radius = kw.get('radius', 1.0)
-    xx = radius * numpy.cos(tt)
-    yy = radius * numpy.sin(tt)
+    xx = rr * numpy.cos(tt)
+    yy = rr * numpy.sin(tt)
 
     return yy, xx
 
