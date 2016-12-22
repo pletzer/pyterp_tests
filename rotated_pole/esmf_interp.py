@@ -16,6 +16,7 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -123,12 +124,13 @@ for k, v in timeStats.items():
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # plot
-latIndex, lonIndex = 0, 1
-lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-from matplotlib import pylab
-pylab.pcolor(lons, lats, dstData.data)
-pylab.show()
+if args.plot:
+    latIndex, lonIndex = 0, 1
+    lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    from matplotlib import pylab
+    pylab.pcolor(lons, lats, dstData.data)
+    pylab.show()
 
 # clean up
 # nothing to do

@@ -16,6 +16,7 @@ parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-8,
                     help='Tolerance in target space')
 parser.add_argument('--nitermax', type=int, dest='nitermax', default=100,
                     help='Max number of iterations')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -232,7 +233,8 @@ for k, v in timeStats.items():
     totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
-plotData(dstDataId)
+if args.plot:
+    plotData(dstDataId)
 
 # clean up
 destroyData(srcDataId)

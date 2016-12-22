@@ -75,7 +75,7 @@ def createField(grid, name, data):
     return field
 
 # set the src/dst grid dimensions
-srcPointDims = (10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
+srcPointDims = (5 + 1, 10 + 1) #(10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
 dstPointDims = (5 + 1, 10 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)

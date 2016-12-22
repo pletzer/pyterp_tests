@@ -67,6 +67,17 @@ for srcDims in src_celldims:
 	if numFails != 0:
 		print('*** {} libcf interp failures'.format(numFails))
 
+print(ns)
+print(esmf_eval)
+print(libcf_eval)
+# write to file
+import re, time
+ta = re.sub(' ', '_', time.asctime())
+f = open('run_node_interp-{}.csv'.format(ta), 'w')
+f.write('src_num_cells*dst_num_cells,esmf_eval,esmf_weights,libcf_eval,libcf_weights\n')
+for i in range(len(ns)):
+	f.write('{},{},{},{},{}\n'.format(ns[i], esmf_eval[i], esmf_weights[i], libcf_eval[i], libcf_weights[i]))
+f.close()
 
 from matplotlib import pylab
 import matplotlib
