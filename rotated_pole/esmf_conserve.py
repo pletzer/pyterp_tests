@@ -10,12 +10,11 @@ import time
 # turn on logging
 esmpy = ESMF.Manager(debug=True)
 
-parser = argparse.ArgumentParser(description='Interpolate using ESMF')
+parser = argparse.ArgumentParser(description='Conservalivaely interpolate using ESMF')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
-parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -37,42 +36,43 @@ def createData(filename, prefix):
     # use iris to read in the data
     # then pass the array to the ESMF API
     cubes = iris.load(filename)
-    cube = None
+    cubePoint, cubeCell = None, None
+    # find the point and cell cubes
     for cb in cubes:
         if cb.var_name == 'pointData':
-            cube = cb
-    coords = cube.coords()
-    lats = coords[0].points
-    lons = coords[1].points
+            cubePoint = cb
+        if cb.var_name == 'cellData':
+            cubeCell = cb
+    coordsPoint = cubePoint.coords()
+    latsPoint = coordsPoint[0].points
+    lonsPoint = coordsPoint[1].points
     
     # create the ESMF grid object
 
     latIndex, lonIndex = 0, 1
-    cellDims = numpy.array([lats.shape[0] - 1, lats.shape[1] - 1])
-    grid = ESMF.Grid(max_index=cellDims) #, num_peri_dims=1, periodic_dim=1)
+    cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
+    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
 
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
 
-    coordLat = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    coordLon = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLatPoint = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLonPoint = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 
-    # get the local start/end index sets
+    # get the local start/end index sets and set the point coordinates
     iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
     iEndLat = grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
     iBegLon = grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
     iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+    coordLatPoint[...] = latsPoint[iBegLat:iEndLat, iBegLon:iEndLon]
+    coordLonPoint[...] = lonsPoint[iBegLat:iEndLat, iBegLon:iEndLon]
 
-    # set the coordinates
-    coordLat[...] = lats[iBegLat:iEndLat, iBegLon:iEndLon]
-    coordLon[...] = lons[iBegLat:iEndLat, iBegLon:iEndLon]
-
-    # create field
-    field = ESMF.Field(grid, name="air_temperature", 
-                   staggerloc=ESMF.StaggerLoc.CORNER)
-    field.data[...] = cube.data[:]
-
+    # local sizes
     nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
+
+    # create and set the field
+    field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
+    field.data[...] = cubeCell.data[:]
 
     return grid, field, nodeDims
 
@@ -92,7 +92,7 @@ dstData.data[...] = -1
 tic = time.time()
 regrid = ESMF.api.regrid.Regrid(srcData, dstData,
                                 src_mask_values=None, dst_mask_values=None,
-                                regrid_method=ESMF.api.constants.RegridMethod.BILINEAR,
+                                regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
                                 pole_method=None,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
                                 line_type=ESMF.api.constants.LineType.GREAT_CIRCLE, # how the distance between two points is computed
@@ -104,7 +104,10 @@ timeStats['weights'] = time.time() - tic
 
 # interpolate
 tic = time.time()
+#print('ooo dstDataRef = {}'.format(dstDataRef))
 regrid(srcData, dstData)
+print('+++ dstData.data = {}'.format(dstData.data))
+
 timeStats['evaluation'] = time.time() - tic
 
 # compute error
@@ -123,13 +126,9 @@ for k, v in timeStats.items():
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # plot
-if args.plot:
-    latIndex, lonIndex = 0, 1
-    lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    from matplotlib import pylab
-    pylab.pcolor(lons, lats, dstData.data)
-    pylab.show()
-
-# clean up
-# nothing to do
+latIndex, lonIndex = 0, 1
+lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CENTER)
+lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CENTER)
+from matplotlib import pylab
+pylab.pcolor(lons, lats, dstData.data)
+pylab.show()

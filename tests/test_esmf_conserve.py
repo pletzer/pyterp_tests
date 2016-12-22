@@ -74,8 +74,29 @@ def createField(grid, name, data):
     field.data[...] = data
     return field
 
+def plotField(field):
+
+    from matplotlib import pylab
+
+    latIndex, lonIndex = 0, 1
+    iBegLat = field.grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
+    iEndLat = field.grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
+    iBegLon = field.grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+    iEndLon = field.grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+
+    lats = field.grid.get_coords(latIndex, ESMF.StaggerLoc.CORNER)[iBegLat:iEndLat, iBegLon:iEndLon]
+    lons = field.grid.get_coords(lonIndex, ESMF.StaggerLoc.CORNER)[iBegLat:iEndLat, iBegLon:iEndLon]
+
+    pylab.pcolormesh(lats, lons, field.data[0,...])
+    pylab.show()
+
 # set the src/dst grid dimensions
+<<<<<<< HEAD:rotated_pole/test_esmf_conserve.py
 srcPointDims = (5 + 1, 10 + 1) #(10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
+=======
+srcPointDims = (10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
+#srcPointDims = (100 + 1, 200 + 1)
+>>>>>>> 7765a22316e1ab6b4e6568bce19620d9762e9eb4:tests/test_esmf_conserve.py
 dstPointDims = (5 + 1, 10 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)
@@ -99,12 +120,20 @@ srcField = createField(srcGrid, 'src', srcData)
 dstData = numpy.zeros(dstCellDims, numpy.float64) # initializing the dst field to zero
 dstField = createField(dstGrid, 'dst', dstData)
 
+# set the field initially to some bad values
+dstField.data[...] = -1000.0
+
+plotField(srcField)
+
 # compute the interpolation weights
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
-                     unmapped_action=ESMF.api.constants.UnmappedAction.ERROR)
+                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
 #regrid
 regrid(srcField, dstField)
+
+plotField(dstField)
+
 
 print(dstField.data)
 

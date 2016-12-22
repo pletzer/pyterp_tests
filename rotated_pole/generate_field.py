@@ -36,13 +36,17 @@ def generateCoordsAndData(nj, ni, delta_lat, delta_lon,
     lats, lons = grid_mapper.createCoords(latsPrime, lonsPrime, 
                                           delta_lat=delta_lat,
                                           delta_lon=delta_lon)
+    print('min/max lats: {} {}'.format(lats.min(), lats.max()))
+    print('min/max lons: {} {}'.format(lons.min(), lons.max()))
     pointData = grid_mapper.createPointData(lats, lons)
     latCells, lonCells, cellData = grid_mapper.createCellData(lats, lons)
 
     pointCube = iris.cube.Cube(pointData, var_name='pointData', 
                                standard_name='air_temperature', cell_methods=None)
-    latCoord = iris.coords.AuxCoord(lats, var_name='lat', standard_name='latitude', units='degrees_north')
-    lonCoord = iris.coords.AuxCoord(lons, var_name='lon', standard_name='longitude', units='degrees_east')
+    latCoord = iris.coords.AuxCoord(lats, var_name='lat',
+                                    standard_name='latitude', units='degrees_north')
+    lonCoord = iris.coords.AuxCoord(lons, var_name='lon',
+                                    standard_name='longitude', units='degrees_east')
     pointCube.add_aux_coord(latCoord, data_dims=(0, 1))
     pointCube.add_aux_coord(lonCoord, data_dims=(0, 1))
     
@@ -99,7 +103,7 @@ if args.dst_file is '':
 # save the result
 srcCubes = generateCoordsAndData(args.src_nj, args.src_ni, args.delta_lat, args.delta_lon,
                                  latMin=-90.0, latMax=90.0,
-                                 lonMin=0.0, lonMax=360.0)
+                                 lonMin=-180., lonMax=180.0)
 iris.save(srcCubes, args.src_file)
 dstCubes = generateCoordsAndData(args.dst_nj, args.dst_ni, delta_lat=0.0, delta_lon=0.0,
                                  latMin=args.dst_latmin, latMax=args.dst_latmax,
