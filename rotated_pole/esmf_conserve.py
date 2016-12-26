@@ -10,7 +10,7 @@ import time
 # turn on logging
 esmpy = ESMF.Manager(debug=True)
 
-parser = argparse.ArgumentParser(description='Conservalivaely interpolate using ESMF')
+parser = argparse.ArgumentParser(description='Conservatively interpolate using ESMF')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
