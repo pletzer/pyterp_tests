@@ -1,5 +1,5 @@
 from __future__ import print_function
-import sigrid
+import sigrid.conserveInterp2D
 import iris
 import numpy
 import sys
@@ -42,7 +42,7 @@ def createData(filename, prefix):
     coordsPoint = cubePoint.coords()
     xPoint = coordsPoint[0].points
     yPoint = coordsPoint[1].points
-    data = cube.data
+    data = cubeCell.data
 
     return xPoint, yPoint, data
     
@@ -57,12 +57,12 @@ dstXCoords, dstYCoords, dstData = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.copy()
-dstData.data[...] = -1
+dstData[...] = -1
 
 # compute the interpolation weights
 tic = time.time()
 interp = sigrid.conserveInterp2D.ConserveInterp2D()
-interp.setDstGrid(dst)
+interp.setDstGrid(dstXCoords, dstYCoords)
 interp.setSrcGrid(periodicity, srcXCoords, srcYCoords)
 interp.computeWeights()
 timeStats['weights'] = time.time() - tic
