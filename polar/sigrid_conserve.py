@@ -57,12 +57,12 @@ dstXCoords, dstYCoords, dstData = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.copy()
-dstData[...] = -1
 
 # compute the interpolation weights
 tic = time.time()
 interp = sigrid.conserveInterp2D.ConserveInterp2D()
 interp.setDstGrid(dstXCoords, dstYCoords)
+periodicity = (False, True) # NEED TO CHECK PERIODICITY
 interp.setSrcGrid(periodicity, srcXCoords, srcYCoords)
 interp.computeWeights()
 timeStats['weights'] = time.time() - tic
@@ -73,12 +73,12 @@ dstData = interp.apply(srcData)
 timeStats['evaluation'] = time.time() - tic
 
 # compute error
-srcNtot = len(srcData.data.flat)
-dstNtot = len(dstData.data.flat)
+srcNtot = len(srcData.flat)
+dstNtot = len(dstData.flat)
 error =  numpy.sum(abs(dstData - dstDataRef)) / float(dstNtot)
 print('sigrid interpolation:')
-print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
-print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
+print('\tsrc: {} ntot: {}'.format(srcXCoords.shape, srcNtot))
+print('\tdst: {} ntot: {}'.format(dstXCoords.shape, dstNtot))
 print('interpolation error: {:.3g}'.format(error))
 totTime = 0.0
 print('time stats:')
