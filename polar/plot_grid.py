@@ -17,8 +17,8 @@ pylab.figure()
 
 def plotCellAreas(cube):
 	coords = cube.coords()
-	yy = coords[0].points
-	xx = coords[1].points
+	yy = coords[1].points
+	xx = coords[0].points
 	dyy = yy[1:, :] - yy[:-1, :]
 	dxx = xx[:, 1:] - xx[:, :-1]
 	dyyMid = 0.5*(dyy[:, :-1] + dyy[:, 1:])
@@ -32,8 +32,8 @@ def plotCellAreas(cube):
 
 def plotGrid(cube, lineType='k--'):
 	coords = cube.coords()
-	yy = coords[0].points
-	xx = coords[1].points
+	xx = coords[0].points
+	yy = coords[1].points
 	nj, ni = yy.shape
 	for j in range(0, nj):
 		y = yy[j, :]

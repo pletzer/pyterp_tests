@@ -40,6 +40,7 @@ def createData(filename, prefix):
         if cb.var_name == 'cellData':
             cubeCell = cb
     coordsPoint = cubePoint.coords()
+    print(coordsPoint)
     xPoint = coordsPoint[0].points
     yPoint = coordsPoint[1].points
     data = cubeCell.data
