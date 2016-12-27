@@ -90,5 +90,7 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # plot
 from matplotlib import pylab
-pylab.pcolor(dstXCoords, dstYCoords, dstData)
+xxCell = 0.25 * (dstXCoords[0:-1, 0:-1] + dstXCoords[1:, 0:-1] + dstXCoords[1:, 1:] + dstXCoords[0:-1, 1:])
+yyCell = 0.25 * (dstYCoords[0:-1, 0:-1] + dstYCoords[1:, 0:-1] + dstYCoords[1:, 1:] + dstYCoords[0:-1, 1:])
+pylab.pcolor(xxCell, yyCell, dstData)
 pylab.show()
