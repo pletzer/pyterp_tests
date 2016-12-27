@@ -64,7 +64,6 @@ def createCellData(yy, xx):
     njM1 , niM1 = nj - 1, ni - 1
     yyCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
     xxCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
-    data = numpy.zeros((njM1, niM1), numpy.float64)
     for j in range(njM1):
         for i in range(niM1):
             yyCells[j, i, :] = yy[j + 0, i + 0], \
@@ -75,11 +74,11 @@ def createCellData(yy, xx):
                                 xx[j + 0, i + 1], \
                                 xx[j + 1, i + 1], \
                                 xx[j + 1, i + 0]
-            # mid point
-            midY = 0.25*yyCells.sum()
-            midX = 0.25*xxCells.sum()
+    # mid point
+    yy = 0.25*yyCells.sum(axis=2)
+    xx = 0.25*xxCells.sum(axis=2)
 
-            # arbitrary function
-            data[j, i] = math.sin(2*math.pi*midX/1.0)*numpy.cos(math.pi*midY/2.0)
+    # arbitrary function
+    data = numpy.sin(2*math.pi*xx/1.0)*numpy.cos(math.pi*yy/2.0)
 
     return yyCells, xxCells, data

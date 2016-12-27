@@ -30,6 +30,12 @@ def plotCellAreas(cube):
 	negativeAreas[numpy.where(areas < 0)] = 1.0
 	pylab.pcolor(xx, yy, negativeAreas, cmap='bone_r')
 
+def plotData(cube):
+	coords = cube.coords()
+	xx = coords[0].points
+	yy = coords[1].points
+	pylab.pcolor(xx, yy, cube.data)	
+
 def plotGrid(cube, lineType='k--'):
 	coords = cube.coords()
 	xx = coords[0].points
@@ -46,19 +52,25 @@ def plotGrid(cube, lineType='k--'):
 
 
 srcCubes = iris.load(args.src_file)
-srcCube = None
+srcPointCube = None
 for cb in srcCubes:
     if cb.var_name == 'pointData':
-        srcCube = cb
+        srcPointCube = cb
+    if cb.var_name == 'cellData':
+    	srcCellCube = cb
 
 dstCubes = iris.load(args.dst_file)
-dstCube = None
+dstPointCube = None
+dstCellCube = None
 for cb in dstCubes:
     if cb.var_name == 'pointData':
-        dstCube = cb
+        dstPointCube = cb
+    if cb.var_name == 'cellCube':
+    	dstCellCube = cb
 
-#plotCellAreas(srcCube)
-plotGrid(srcCube, 'g-')
-plotGrid(dstCube, 'r-')
+plotCellAreas(srcPointCube)
+plotData(srcPointCube)
+plotGrid(srcPointCube, 'g-')
+plotGrid(dstPointCube, 'r-')
 
 pylab.show()
