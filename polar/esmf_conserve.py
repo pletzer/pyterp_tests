@@ -104,7 +104,6 @@ timeStats['weights'] = time.time() - tic
 # interpolate
 tic = time.time()
 regrid(srcData, dstData)
-print('+++ dstData.data = {}'.format(dstData.data))
 
 timeStats['evaluation'] = time.time() - tic
 
@@ -131,5 +130,5 @@ xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint
 yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint[0:-1, 1:])
 
 from matplotlib import pylab
-pylab.pcolor(xxCell, yyCell, dstData.data)
+pylab.pcolor(xxCell, yyCell, dstData.data, vmin=-1.0, vmax=1.0)
 pylab.show()

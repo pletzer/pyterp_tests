@@ -40,7 +40,6 @@ def createData(filename, prefix):
         if cb.var_name == 'cellData':
             cubeCell = cb
     coordsPoint = cubePoint.coords()
-    print(coordsPoint)
     xPoint = coordsPoint[0].points
     yPoint = coordsPoint[1].points
     data = cubeCell.data
@@ -92,5 +91,5 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 from matplotlib import pylab
 xxCell = 0.25 * (dstXCoords[0:-1, 0:-1] + dstXCoords[1:, 0:-1] + dstXCoords[1:, 1:] + dstXCoords[0:-1, 1:])
 yyCell = 0.25 * (dstYCoords[0:-1, 0:-1] + dstYCoords[1:, 0:-1] + dstYCoords[1:, 1:] + dstYCoords[0:-1, 1:])
-pylab.pcolor(xxCell, yyCell, dstData)
+pylab.pcolor(xxCell, yyCell, dstData, vmin=-1.0, vmax=1.0)
 pylab.show()
