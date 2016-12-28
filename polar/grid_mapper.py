@@ -62,18 +62,19 @@ def createCellData(yy, xx):
     """
     nj, ni = yy.shape
     njM1 , niM1 = nj - 1, ni - 1
+
     yyCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
+    yyCells[..., 0] = yy[:-1, :-1]
+    yyCells[..., 1] = yy[:-1, 1:]
+    yyCells[..., 2] = yy[1:, 1:]
+    yyCells[..., 3] = yy[1:, :-1]
+
     xxCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
-    for j in range(njM1):
-        for i in range(niM1):
-            yyCells[j, i, :] = yy[j + 0, i + 0], \
-                                yy[j + 0, i + 1], \
-                                yy[j + 1, i + 1], \
-                                yy[j + 1, i + 0]
-            xxCells[j, i, :] = xx[j + 0, i + 0], \
-                                xx[j + 0, i + 1], \
-                                xx[j + 1, i + 1], \
-                                xx[j + 1, i + 0]
+    xxCells[..., 0] = xx[:-1, :-1]
+    xxCells[..., 1] = xx[:-1, 1:]
+    xxCells[..., 2] = xx[1:, 1:]
+    xxCells[..., 3] = xx[1:, :-1]
+
     # mid point
     yy = 0.25*yyCells.sum(axis=2)
     xx = 0.25*xxCells.sum(axis=2)

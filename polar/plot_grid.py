@@ -34,7 +34,7 @@ def plotData(cube):
 	coords = cube.coords()
 	xx = coords[0].points
 	yy = coords[1].points
-	pylab.pcolor(xx, yy, cube.data)	
+	pylab.pcolor(xx, yy, cube.data, vmin=-1.0, vmax=1.0)	
 
 def plotGrid(cube, lineType='k--'):
 	coords = cube.coords()
