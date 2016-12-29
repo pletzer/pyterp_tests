@@ -91,12 +91,7 @@ def plotField(field):
     pylab.show()
 
 # set the src/dst grid dimensions
-<<<<<<< HEAD:rotated_pole/test_esmf_conserve.py
-srcPointDims = (5 + 1, 10 + 1) #(10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
-=======
 srcPointDims = (10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
-#srcPointDims = (100 + 1, 200 + 1)
->>>>>>> 7765a22316e1ab6b4e6568bce19620d9762e9eb4:tests/test_esmf_conserve.py
 dstPointDims = (5 + 1, 10 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)
@@ -128,7 +123,7 @@ plotField(srcField)
 # compute the interpolation weights
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
-                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
+                     unmapped_action=ESMF.api.constants.UnmappedAction.ERROR) # IGNORE works
 #regrid
 regrid(srcField, dstField)
 
