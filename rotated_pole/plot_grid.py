@@ -37,11 +37,14 @@ def plotGrid(cube, lineType='k--'):
 	lats = coords[0].points
 	lons = coords[1].points
 	nj, ni = lats.shape
-	for j in range(0, nj, nj//20):
+	# number of grid lines
+	nc = 20
+	njstep, nistep = max(1, nj//nc), max(1, ni//nc)
+	for j in range(0, nj, njstep):
 		y = lats[j, :]
 		x = lons[j, :]
 		pylab.plot(x, y, lineType)
-	for i in range(0, ni, ni//20):
+	for i in range(0, ni, nistep):
 		y = lats[:, i]
 		x = lons[:, i]
 		pylab.plot(x, y, lineType)
