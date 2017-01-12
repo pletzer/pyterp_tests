@@ -51,7 +51,7 @@ def createData(filename, prefix):
 
     latIndex, lonIndex = 0, 1
     cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
-    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
+    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.CART) #SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
 
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
@@ -95,7 +95,7 @@ regrid = ESMF.api.regrid.Regrid(srcData, dstData,
                                 regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
                                 pole_method=None,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
-                                line_type=ESMF.api.constants.LineType.GREAT_CIRCLE, # how the distance between two points is computed
+                                line_type=ESMF.api.constants.LineType.CART, #GREAT_CIRCLE, # how the distance between two points is computed
                                 norm_type=None, # only for conservative regridding
                                 unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE, 
                                 ignore_degenerate=True, # produce an error if two points are degenerate and if set to False
@@ -106,7 +106,6 @@ timeStats['weights'] = time.time() - tic
 tic = time.time()
 #print('ooo dstDataRef = {}'.format(dstDataRef))
 regrid(srcData, dstData)
-print('+++ dstData.data = {}'.format(dstData.data))
 
 timeStats['evaluation'] = time.time() - tic
 

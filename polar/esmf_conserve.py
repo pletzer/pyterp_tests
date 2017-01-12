@@ -50,7 +50,7 @@ def createData(filename, prefix):
     # create the ESMF grid object
     xIndex, yIndex = 0, 1
     cellDims = numpy.array([xPoint.shape[0] - 1, xPoint.shape[1] - 1])
-    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
+    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.CART) #SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=xIndex)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=yIndex)
 
