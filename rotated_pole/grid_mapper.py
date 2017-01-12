@@ -85,13 +85,8 @@ def createPointData(lats, lons):
     @param lons 2D longitude data
     @return data
     """
-    nj, ni = lats.shape
-    data = numpy.zeros(lats.shape, numpy.float64)
-    for j in range(nj):
-        for i in range(ni):
-            # arbitrary function
-            data[j, i] = math.sin(2*math.pi*lons[j, i]/180.)*numpy.cos(math.pi*lats[j, i]/180.)
-
+    # arbitrary function
+    data = numpy.sin(2*math.pi*lons/180.)*numpy.cos(math.pi*lats/180.)
     return data
 
 def createCellData(lats, lons):
@@ -105,22 +100,21 @@ def createCellData(lats, lons):
     njM1 , niM1 = nj - 1, ni - 1
     latCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
     lonCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
-    data = numpy.zeros((njM1, niM1), numpy.float64)
-    for j in range(njM1):
-        for i in range(niM1):
-            latCells[j, i, :] = lats[j + 0, i + 0], \
-                                lats[j + 0, i + 1], \
-                                lats[j + 1, i + 1], \
-                                lats[j + 1, i + 0]
-            lonCells[j, i, :] = lons[j + 0, i + 0], \
-                                lons[j + 0, i + 1], \
-                                lons[j + 1, i + 1], \
-                                lons[j + 1, i + 0]
-            # mid point
-            midLat = 0.25*latCells.sum()
-            midLon = 0.25*lonCells.sum()
 
-            # arbitrary function
-            data[j, i] = math.sin(2*math.pi*midLon/180.)*numpy.cos(math.pi*midLat/180.)
+    latCells[..., 0] = lats[:-1, :-1]
+    latCells[..., 1] = lats[:-1, 1:]
+    latCells[..., 2] = lats[1:, 1:]
+    latCells[..., 3] = lats[1:, :-1]
+
+    lonCells[..., 0] = lons[:-1, :-1]
+    lonCells[..., 1] = lons[:-1, 1:]
+    lonCells[..., 2] = lons[1:, 1:]
+    lonCells[..., 3] = lons[1:, :-1]
+
+    midLat = 0.25*latCells.sum(axis=2)
+    midLon = 0.25*lonCells.sum(axis=2)
+
+    # arbitrary function
+    data = numpy.sin(2*math.pi*midLon/180.)*numpy.cos(math.pi*midLat/180.)
 
     return latCells, lonCells, data
