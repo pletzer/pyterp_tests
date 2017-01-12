@@ -1,6 +1,7 @@
 import ESMF
 import numpy
 import math
+from matplotlib import pylab
 
 ESMF.Manager(debug=True)
 
@@ -108,10 +109,7 @@ def createField(grid, name, data):
     field.data[...] = data
     return field
 
-def plotField(field):
-
-    from matplotlib import pylab
-
+def plotField(field, linetype='k-'):
     latIndex, lonIndex = 0, 1
     iBegLat = field.grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
     iEndLat = field.grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
@@ -121,11 +119,20 @@ def plotField(field):
     lats = field.grid.get_coords(latIndex, ESMF.StaggerLoc.CORNER)[iBegLat:iEndLat, iBegLon:iEndLon]
     lons = field.grid.get_coords(lonIndex, ESMF.StaggerLoc.CORNER)[iBegLat:iEndLat, iBegLon:iEndLon]
 
-    pylab.pcolormesh(lats, lons, field.data[0,...])
-    pylab.show()
+    # plot the grid
+    nc = 20 # number of curves
+    nj, ni = lats.shape
+    stepj, stepi = max(1, nj//nc), max(1, ni//nc)
+    for j in range(0, nj, stepj):
+        pylab.plot(lons[j, :], lats[j, :], linetype)
+    for i in range(0, ni, stepi):
+        pylab.plot(lons[:, i], lats[:, i], linetype)
+
+    pylab.pcolormesh(lons, lats, field.data[0,...])
+    #pylab.show()
 
 # set the src/dst grid dimensions
-srcPointDims = (10 + 1, 20 + 1) # (100 + 1, 200 + 1) works!
+srcPointDims = (100 + 1, 200 + 1)
 dstPointDims = (5 + 1, 10 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)
@@ -138,8 +145,8 @@ delta_lat, delta_lon = 30.0, 20.0
 srcLats2D, srcLons2D = createRotatedPoleCoords(srcLatsPrime, srcLonsPrime, delta_lat, delta_lon)
 
 # target grid is lat-lon
-dstLatsPrime = numpy.linspace(-90., 90, dstPointDims[0])
-dstLonsPrime = numpy.linspace(-180., 180, dstPointDims[1])
+dstLatsPrime = numpy.linspace(-20., 20, dstPointDims[0]) #numpy.linspace(-90., 90, dstPointDims[0])
+dstLonsPrime = numpy.linspace(-110., 110, dstPointDims[1]) #numpy.linspace(-180., 180, dstPointDims[1])
 dstLats2D, dstLons2D = createRotatedPoleCoords(dstLatsPrime, dstLonsPrime, 0.0, 0.0)
 
 # create the ESMF src/dst grids
@@ -157,19 +164,20 @@ dstField = createField(dstGrid, 'dst', dstData)
 # set the field initially to some bad values
 dstField.data[...] = -1000.0
 
-plotField(srcField)
+plotField(srcField, 'g-')
 
 # compute the interpolation weights
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
-                     unmapped_action=ESMF.api.constants.UnmappedAction.ERROR) # IGNORE works
+                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE) # IGNORE works
 #regrid
 regrid(srcField, dstField)
 
-plotField(dstField)
-
-
 print(dstField.data)
+
+plotField(dstField, 'r-')
+pylab.show()
+
 
 
 
