@@ -87,6 +87,10 @@ for k, v in timeStats.items():
     totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
+# check sum
+checksum = numpy.sum(dstData, axis=None)
+print('check sum: {:.15g}'.format(checksum))
+
 # plot
 from matplotlib import pylab
 xxCell = 0.25 * (dstXCoords[0:-1, 0:-1] + dstXCoords[1:, 0:-1] + dstXCoords[1:, 1:] + dstXCoords[0:-1, 1:])

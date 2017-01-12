@@ -122,6 +122,10 @@ for k, v in timeStats.items():
     totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
+# check sum
+checksum = numpy.sum(dstData.data, axis=None)
+print('check sum: {:.15g}'.format(checksum))
+
 # plot
 xIndex, yIndex = 0, 1
 xPoint = dstGrid.get_coords(coord_dim=xIndex, staggerloc=ESMF.StaggerLoc.CORNER)
