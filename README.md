@@ -16,9 +16,9 @@ This repository contains curvilinear interpolation tests.
 
 ### Polar grid to uniform grid
 
-Source grid: 
+Source grid: 400 x 800
 
-Target grid: 
+Target grid: 200 x 400
 
 
 #### Conservative (cell centered field)
@@ -27,14 +27,14 @@ Target grid:
 |               |  weight sec   | eval sec     | error       |
 | ------------- |---------------|--------------|-------------|
 | sigrid        |               |              |             |
-| ESMF/ESMPy    |               |              |             |
+| ESMF/ESMPy    |  7.86         |   0.003      | -0.0013     |
 
 
 ### Rotated pole grid to uniform grid
 
-Source grid: 
+Source grid: 360 x 720
 
-Target grid: 
+Target grid: 180 x 360
 
 
 #### Bilinear (nodal field)
