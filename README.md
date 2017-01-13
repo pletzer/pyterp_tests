@@ -14,6 +14,9 @@ This repository contains curvilinear interpolation tests.
 
 ## Results
 
+Shown are execution times for the computation of the interpolation weights and the times it takes to apply 
+the weights to the fiels (eval). 
+
 ### Polar grid to uniform grid
 
 Source grid: 400 x 800
