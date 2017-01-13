@@ -54,20 +54,20 @@ def createData(filename, prefix):
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latsIndex)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonsIndex)
 
-    coordLatsPoint = grid.get_coords(coord_dim=xIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    coordYPoint = grid.get_coords(coord_dim=yIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLatsPoint = grid.get_coords(coord_dim=latsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLonsPoint = grid.get_coords(coord_dim=lonsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 
     # get the local start/end index sets and set the point coordinates
-    iBegX = grid.lower_bounds[ESMF.StaggerLoc.CORNER][xIndex]
-    iEndX = grid.upper_bounds[ESMF.StaggerLoc.CORNER][xIndex]
-    iBegY = grid.lower_bounds[ESMF.StaggerLoc.CORNER][yIndex]
-    iEndY = grid.upper_bounds[ESMF.StaggerLoc.CORNER][yIndex]
+    iBegLats = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latsIndex]
+    iEndLats = grid.upper_bounds[ESMF.StaggerLoc.CORNER][latsIndex]
+    iBegLons = grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonsIndex]
+    iEndLons = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonsIndex]
     # NEED TO CHECK ORDERING!!!
-    coordXPoint[...] = xPoint[iBegX:iEndX, iBegY:iEndY]
-    coordYPoint[...] = yPoint[iBegX:iEndX, iBegY:iEndY]
+    coordLatsPoint[...] = latsPoint[iBegLats:iEndLats, iBegLons:iEndLons]
+    coordLonsPoint[...] = lonsPoint[iBegLats:iEndLats, iBegLons:iEndLons]
 
     # local sizes
-    nodeDims = (iEndX - iBegX, iEndY - iBegY)
+    nodeDims = (iEndLats - iBegLats, iEndLons - iBegLons)
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
@@ -127,9 +127,9 @@ checksum = numpy.sum(dstData.data, axis=None)
 print('check sum: {:.15g}'.format(checksum))
 
 # plot
-xIndex, yIndex = 0, 1
-xPoint = dstGrid.get_coords(coord_dim=xIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-yPoint = dstGrid.get_coords(coord_dim=yIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+latsIndex, lonsIndex = 0, 1
+xPoint = dstGrid.get_coords(coord_dim=latsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+yPoint = dstGrid.get_coords(coord_dim=lonsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint[0:-1, 1:])
 yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint[0:-1, 1:])
 

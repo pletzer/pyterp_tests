@@ -97,7 +97,7 @@ regrid = ESMF.api.regrid.Regrid(srcData, dstData,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
                                 line_type=ESMF.api.constants.LineType.GREAT_CIRCLE, # how the distance between two points is computed
                                 norm_type=None, # only for conservative regridding
-                                unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE, 
+                                unmapped_action=ESMF.api.constants.UnmappedAction.ERROR, 
                                 ignore_degenerate=True, # produce an error if two points are degenerate and if set to False
                                 src_frac_field=None, dst_frac_field=None)
 timeStats['weights'] = time.time() - tic
