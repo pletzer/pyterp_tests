@@ -25,7 +25,9 @@ src_celldims = [(10, 20),
                 (40, 80),
                 (80, 160),
                 (160, 320),
-                (320, 640)]
+                (320, 640),
+                (640, 1280),
+                (1280, 2560)]
 
 
 ns = []
@@ -69,7 +71,9 @@ for srcDims in src_celldims:
 
 print(ns)
 print(esmf_eval)
+print(esmf_weights)
 print(libcf_eval)
+print(libcf_weights)
 # write to file
 import re, time
 ta = re.sub(' ', '_', time.asctime())

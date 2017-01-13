@@ -32,17 +32,17 @@ Target grid: 200 x 400
 
 ### Rotated pole grid to uniform grid
 
-Source grid: 360 x 720
+Source grid: 1281 x 2560
 
-Target grid: 180 x 360
+Target grid: 641 x 1281
 
 
 #### Bilinear (nodal field)
 
 |               |  weight sec   | eval sec     | error       |
 | ------------- |---------------|--------------|-------------|
-| libcf/pycf    |               |              |             |
-| ESMF/ESMPy    |               |              |             |     
+| libcf/pycf    |  9.41         |  0.0333      |   4.73e-06  |
+| ESMF/ESMPy    |  100.0        |  0.0216      |   9.26e-06  |     
 
 #### Conservative (cell centered field)
 
