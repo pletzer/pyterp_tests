@@ -48,27 +48,26 @@ def createData(filename, prefix):
     lonsPoint = coordsPoint[1].points
     
     # create the ESMF grid object
-
-    latIndex, lonIndex = 0, 1
+    latsIndex, lonsIndex = 0, 1
     cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
     grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.CART) #SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latsIndex)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonsIndex)
 
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
-
-    coordLatPoint = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    coordLonPoint = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLatsPoint = grid.get_coords(coord_dim=xIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordYPoint = grid.get_coords(coord_dim=yIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 
     # get the local start/end index sets and set the point coordinates
-    iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
-    iEndLat = grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
-    iBegLon = grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
-    iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
-    coordLatPoint[...] = latsPoint[iBegLat:iEndLat, iBegLon:iEndLon]
-    coordLonPoint[...] = lonsPoint[iBegLat:iEndLat, iBegLon:iEndLon]
+    iBegX = grid.lower_bounds[ESMF.StaggerLoc.CORNER][xIndex]
+    iEndX = grid.upper_bounds[ESMF.StaggerLoc.CORNER][xIndex]
+    iBegY = grid.lower_bounds[ESMF.StaggerLoc.CORNER][yIndex]
+    iEndY = grid.upper_bounds[ESMF.StaggerLoc.CORNER][yIndex]
+    # NEED TO CHECK ORDERING!!!
+    coordXPoint[...] = xPoint[iBegX:iEndX, iBegY:iEndY]
+    coordYPoint[...] = yPoint[iBegX:iEndX, iBegY:iEndY]
 
     # local sizes
-    nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
+    nodeDims = (iEndX - iBegX, iEndY - iBegY)
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
@@ -95,7 +94,7 @@ regrid = ESMF.api.regrid.Regrid(srcData, dstData,
                                 regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
                                 pole_method=None,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
-                                line_type=ESMF.api.constants.LineType.CART, #GREAT_CIRCLE, # how the distance between two points is computed
+                                line_type=ESMF.api.constants.LineType.CART, # how the distance between two points is computed
                                 norm_type=None, # only for conservative regridding
                                 unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE, 
                                 ignore_degenerate=True, # produce an error if two points are degenerate and if set to False
@@ -104,7 +103,6 @@ timeStats['weights'] = time.time() - tic
 
 # interpolate
 tic = time.time()
-#print('ooo dstDataRef = {}'.format(dstDataRef))
 regrid(srcData, dstData)
 
 timeStats['evaluation'] = time.time() - tic
@@ -124,10 +122,17 @@ for k, v in timeStats.items():
     totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
+# check sum
+checksum = numpy.sum(dstData.data, axis=None)
+print('check sum: {:.15g}'.format(checksum))
+
 # plot
-latIndex, lonIndex = 0, 1
-lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CENTER)
-lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CENTER)
+xIndex, yIndex = 0, 1
+xPoint = dstGrid.get_coords(coord_dim=xIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+yPoint = dstGrid.get_coords(coord_dim=yIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint[0:-1, 1:])
+yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint[0:-1, 1:])
+
 from matplotlib import pylab
-pylab.pcolor(lons, lats, dstData.data)
+pylab.pcolor(xxCell, yyCell, dstData.data, vmin=-1.0, vmax=1.0)
 pylab.show()
