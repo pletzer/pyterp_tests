@@ -44,8 +44,8 @@ Target grid: 641 x 1281
 
 |               |  weight sec   | eval sec     | error       |
 | ------------- |---------------|--------------|-------------|
-| libcf/pycf    |  9.41         |  0.0333      |   4.73e-06  |
-| ESMF/ESMPy    |  100.0        |  0.0216      |   9.26e-06  |     
+| libcf/pycf    |  12.9         |  0.028       |   2.8e-06   |
+| ESMF/ESMPy    |  234          |  0.53        |   9.3e-06   |
 
 #### Conservative (cell centered field)
 
