@@ -12,9 +12,9 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
-parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-8,
+parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-6,
                     help='Tolerance in target space')
-parser.add_argument('--nitermax', type=int, dest='nitermax', default=100,
+parser.add_argument('--nitermax', type=int, dest='nitermax', default=1000,
                     help='Max number of iterations')
 parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
