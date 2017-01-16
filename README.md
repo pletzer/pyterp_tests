@@ -15,7 +15,7 @@ This repository contains curvilinear interpolation tests.
 ## Results
 
 Shown are execution times for the computation of the interpolation weights and the times it takes to apply 
-the weights to the fiels (eval). 
+the weights to the fields (eval). 
 
 ### Polar grid to uniform grid
 
