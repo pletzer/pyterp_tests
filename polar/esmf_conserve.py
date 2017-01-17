@@ -15,6 +15,7 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -133,6 +134,7 @@ yPoint = dstGrid.get_coords(coord_dim=yIndex, staggerloc=ESMF.StaggerLoc.CORNER)
 xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint[0:-1, 1:])
 yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint[0:-1, 1:])
 
-from matplotlib import pylab
-pylab.pcolor(xxCell, yyCell, dstData.data, vmin=-1.0, vmax=1.0)
-pylab.show()
+if args.plot:
+    from matplotlib import pylab
+    pylab.pcolor(xxCell, yyCell, dstData.data, vmin=-1.0, vmax=1.0)
+    pylab.show()

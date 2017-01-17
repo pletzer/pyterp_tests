@@ -12,6 +12,7 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -91,9 +92,9 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 checksum = numpy.sum(dstData, axis=None)
 print('check sum: {:.15g}'.format(checksum))
 
-# plot
-from matplotlib import pylab
-xxCell = 0.25 * (dstXCoords[0:-1, 0:-1] + dstXCoords[1:, 0:-1] + dstXCoords[1:, 1:] + dstXCoords[0:-1, 1:])
-yyCell = 0.25 * (dstYCoords[0:-1, 0:-1] + dstYCoords[1:, 0:-1] + dstYCoords[1:, 1:] + dstYCoords[0:-1, 1:])
-pylab.pcolor(xxCell, yyCell, dstData, vmin=-1.0, vmax=1.0)
-pylab.show()
+if args.plot:
+    from matplotlib import pylab
+    xxCell = 0.25 * (dstXCoords[0:-1, 0:-1] + dstXCoords[1:, 0:-1] + dstXCoords[1:, 1:] + dstXCoords[0:-1, 1:])
+    yyCell = 0.25 * (dstYCoords[0:-1, 0:-1] + dstYCoords[1:, 0:-1] + dstYCoords[1:, 1:] + dstYCoords[0:-1, 1:])
+    pylab.pcolor(xxCell, yyCell, dstData, vmin=-1.0, vmax=1.0)
+    pylab.show()
