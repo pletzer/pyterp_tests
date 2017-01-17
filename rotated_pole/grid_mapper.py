@@ -1,5 +1,6 @@
 import math
 import numpy
+import re
 
 def getCellAreas(lats, lons):
 
@@ -78,24 +79,29 @@ def createCoords(latsPrime, lonsPrime, **kw):
 
     return lats, lons
 
-def createPointData(lats, lons):
+def createPointData(lats, lons, expr='sin(2*pi*lons/180.)*cos(pi*lats/180.)'):
     """
     Create nodal data from curvilinear coordinates
     @param lats 2D latitude data
     @param lons 2D longitude data
     @return data
     """
+    from math import pi
+    from numpy import cos, sin, log, tan, log, exp
     # arbitrary function
-    data = numpy.sin(2*math.pi*lons/180.)*numpy.cos(math.pi*lats/180.)
+    data = eval(expr)
+    #data = numpy.sin(2*math.pi*lons/180.)*numpy.cos(math.pi*lats/180.)
     return data
 
-def createCellData(lats, lons):
+def createCellData(lats, lons, expr='sin(2*pi*lons/180.)*cos(pi*lats/180.)'):
     """
     Create zonal data from curvilinear coordinates
     @param lats 2D latitude data
     @param lons 2D longitude data
     @return latCells, lonCells, data
     """
+    from math import pi
+    from numpy import cos, sin, log, tan, log, exp    
     nj, ni = lats.shape
     njM1 , niM1 = nj - 1, ni - 1
     latCells = numpy.zeros((njM1, niM1, 4), numpy.float64)
@@ -115,6 +121,8 @@ def createCellData(lats, lons):
     midLon = 0.25*lonCells.sum(axis=2)
 
     # arbitrary function
-    data = numpy.sin(2*math.pi*midLon/180.)*numpy.cos(math.pi*midLat/180.)
+    expr = re.sub('lons', 'midLon', re.sub('lats', 'midLat', expr))
+    data = eval(expr)
+    #data = numpy.sin(2*math.pi*midLon/180.)*numpy.cos(math.pi*midLat/180.)
 
     return latCells, lonCells, data
