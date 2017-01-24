@@ -141,7 +141,8 @@ dstCellDims = (dstPointDims[0] - 1, dstPointDims[1] - 1)
 # 2d latitude and longitude coordinates (rotated grid)
 srcLatsPrime = numpy.linspace(-90., 90, srcPointDims[0])
 srcLonsPrime = numpy.linspace(-180., 180, srcPointDims[1])
-delta_lat, delta_lon = 30.0, 20.0
+
+delta_lat, delta_lon = 10.0, 10.0 #30.0, 20.0
 srcLats2D, srcLons2D = createRotatedPoleCoords(srcLatsPrime, srcLonsPrime, delta_lat, delta_lon)
 
 # target grid is lat-lon
@@ -169,7 +170,7 @@ plotField(srcField, 'g-')
 # compute the interpolation weights
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
-                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE) # IGNORE works
+                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
 #regrid
 regrid(srcField, dstField)
 
