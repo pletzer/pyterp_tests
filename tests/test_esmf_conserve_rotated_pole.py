@@ -131,6 +131,54 @@ def plotField(field, linetype='k-'):
     pylab.pcolormesh(lons, lats, field.data[0,...])
     #pylab.show()
 
+def plotGrid3d(field):
+    import vtk
+    pt = vtk.vtkPoints()
+    sg = vtk.vtkStructuredGrid()
+    mp = vtk.vtkDataSetMapper()
+    ac = vtk.vtkActor()
+    # connect
+    sg.SetPoints(pt)
+    mp.SetInputData(sg)
+    ac.SetMapper(mp)
+    # set
+    latIndex, lonIndex = 0, 1
+    iBegLat = field.grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
+    iEndLat = field.grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
+    iBegLon = field.grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+    iEndLon = field.grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+    lats = field.grid.get_coords(latIndex, ESMF.StaggerLoc.CORNER)[iBegLat:iEndLat, iBegLon:iEndLon]
+    lons = field.grid.get_coords(lonIndex, ESMF.StaggerLoc.CORNER)[iBegLat:iEndLat, iBegLon:iEndLon]
+    n0, n1 = lats.shape
+    numPoints = n0 * n1
+    pt.SetNumberOfPoints(numPoints)
+    sg.SetDimensions(1, n0, n1)
+
+    # fill in the points
+    k = 0
+    for i1 in range(n1):
+        for i0 in range(n0):
+            x = math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
+            y = math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
+            z = math.sin(lats[i0, i1] * math.pi/180.)
+            pt.SetPoint(k, x, y, z)
+            k += 1
+    return ac, mp, sg, pt
+
+def render(actors):
+    import vtk
+    renderer = vtk.vtkRenderer()
+    renderWindow = vtk.vtkRenderWindow()
+    renderWindow.AddRenderer(renderer)    
+
+    for ac in actors:
+        renderer.AddActor(ac)
+    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor.SetRenderWindow(renderWindow)
+    renderer.SetBackground(.0, .0, .0)
+    renderWindow.Render()
+    renderWindowInteractor.Start()
+
 # set the src/dst grid dimensions
 srcPointDims = (100 + 1, 200 + 1)
 dstPointDims = (5 + 1, 10 + 1)
@@ -177,6 +225,8 @@ regrid(srcField, dstField)
 print(dstField.data)
 
 plotField(dstField, 'r-')
+pipeline = plotGrid3d(srcField)
+render([pipeline[0]])
 pylab.show()
 
 
