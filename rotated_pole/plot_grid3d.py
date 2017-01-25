@@ -23,8 +23,7 @@ def readCube(filename):
 			cube = cb
 	return cube
 
-def createPipeline(cube, color=(1.,1.,1.), radius=1.0):
-	cube = readCube(args.src_file)
+def createPipeline(cube, color=(1.,1.,1.), radius=1.0, show_mesh_as_surface=False):
 	n0, n1 = cube.data.shape
 	numPoints = n0 * n1
 	sg = vtk.vtkStructuredGrid()
@@ -45,6 +44,13 @@ def createPipeline(cube, color=(1.,1.,1.), radius=1.0):
 	sg = vtk.vtkStructuredGrid()
 	sg.SetDimensions(1, n0, n1)
 	sg.SetPoints(pt)
+	mp, ac = None, None
+	# show mesh as a surface
+	if show_mesh_as_surface:
+		mp = vtk.vtkDataSetMapper()
+                mp.SetInputData(sg)
+		ac = vtk.vtkActor()
+		ac.SetMapper(mp)           
 	# show the grid as tubes
 	ed = vtk.vtkExtractEdges()
         et = vtk.vtkTubeFilter()
@@ -56,22 +62,28 @@ def createPipeline(cube, color=(1.,1.,1.), radius=1.0):
 	em.SetInputConnection(et.GetOutputPort())
 	ea.SetMapper(em)
 	ea.GetProperty().SetColor(color)
-	return ea, et, ed, em, sg, pt
+	return [ea, ac], et, ed, em, sg, pt, mp
+
+def render(actors):
+	# rendering stuff
+	renderer = vtk.vtkRenderer()
+	renderWindow = vtk.vtkRenderWindow()
+	renderWindow.AddRenderer(renderer)
+	renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+	renderWindowInteractor.SetRenderWindow(renderWindow)
+	for a in actors:
+		if a is not None:
+			renderer.AddActor(a)
+	renderer.SetBackground(.0, .0, .0)
+	renderWindow.Render()
+	renderWindowInteractor.Start()
 		
 src_cube = readCube(args.src_file)
-src_pipeline = createPipeline(src_cube, color=(0.0, 1.0, 0.0), radius=0.99)
-dst_cube = readCube(args.dst_file)
-dst_pipeline = createPipeline(dst_cube, color=(1.0, 0.0, 0.0), radius=1.01)
+src_pipeline = createPipeline(src_cube, color=(0.0, 1.0, 0.0), radius=0.99, show_mesh_as_surface=True)
 
-# rendering stuff
-renderer = vtk.vtkRenderer()
-renderWindow = vtk.vtkRenderWindow()
-renderWindow.AddRenderer(renderer)
-renderWindowInteractor = vtk.vtkRenderWindowInteractor()
-renderWindowInteractor.SetRenderWindow(renderWindow)
-for a in [src_pipeline[0], dst_pipeline[0]]:
-	renderer.AddActor(a)
-renderer.SetBackground(.0, .0, .0)
-renderWindow.Render()
-renderWindowInteractor.Start()
+dst_cube = readCube(args.dst_file)
+dst_pipeline = createPipeline(dst_cube, color=(1.0, 0.0, 0.0), radius=1.05)
+
+render(src_pipeline[0] + dst_pipeline[0])
+
 
