@@ -49,7 +49,17 @@ def createPipeline(cube):
 	mp.SetInputData(sg)
 	ac = vtk.vtkActor()
 	ac.SetMapper(mp)
-	return ac, mp, sg, pt
+	# show the grid as tubes
+	ed = vtk.vtkExtractEdges()
+        et = vtk.vtkTubeFilter()
+	em = vtk.vtkPolyDataMapper()
+	ea = vtk.vtkActor()
+	et.SetRadius(0.01)
+	ed.SetInputData(sg)
+	et.SetInputConnection(ed.GetOutputPort())
+	em.SetInputConnection(et.GetOutputPort())
+	ea.SetMapper(em)
+	return [ac, ea], mp, sg, pt
 		
 src_cube = readCube(args.src_file)
 src_pipeline = createPipeline(src_cube)
@@ -60,7 +70,8 @@ renderWindow = vtk.vtkRenderWindow()
 renderWindow.AddRenderer(renderer)
 renderWindowInteractor = vtk.vtkRenderWindowInteractor()
 renderWindowInteractor.SetRenderWindow(renderWindow)
-renderer.AddActor(src_pipeline[0])
+for a in src_pipeline[0]:
+	renderer.AddActor(a)
 renderer.SetBackground(.0, .0, .0)
 renderWindow.Render()
 renderWindowInteractor.Start()

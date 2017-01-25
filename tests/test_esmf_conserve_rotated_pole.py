@@ -131,7 +131,7 @@ def plotField(field, linetype='k-'):
     pylab.pcolormesh(lons, lats, field.data[0,...])
     #pylab.show()
 
-def plotGrid3d(field):
+def plotGrid3d(field, color=(0.5, 0.1, 0.1), radius=1.0):
     import vtk
     pt = vtk.vtkPoints()
     sg = vtk.vtkStructuredGrid()
@@ -142,6 +142,7 @@ def plotGrid3d(field):
     mp.SetInputData(sg)
     ac.SetMapper(mp)
     # set
+    ac.GetProperty().SetColor(color)
     latIndex, lonIndex = 0, 1
     iBegLat = field.grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
     iEndLat = field.grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
@@ -158,9 +159,9 @@ def plotGrid3d(field):
     k = 0
     for i1 in range(n1):
         for i0 in range(n0):
-            x = math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
-            y = math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
-            z = math.sin(lats[i0, i1] * math.pi/180.)
+            x = radius*math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
+            y = radius*math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
+            z = radius*math.sin(lats[i0, i1] * math.pi/180.)
             pt.SetPoint(k, x, y, z)
             k += 1
     return ac, mp, sg, pt
@@ -219,14 +220,15 @@ plotField(srcField, 'g-')
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
                      unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
-#regrid
+#regri5
 regrid(srcField, dstField)
 
 print(dstField.data)
 
 plotField(dstField, 'r-')
-pipeline = plotGrid3d(srcField)
-render([pipeline[0]])
+src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.99)
+dst_pipeline = plotGrid3d(dstField, color=(0.5, 0., 0.), radius=1.05)
+render([src_pipeline[0], dst_pipeline[0]])
 pylab.show()
 
 
