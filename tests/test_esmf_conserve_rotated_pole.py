@@ -164,7 +164,18 @@ def plotGrid3d(field, color=(0.5, 0.1, 0.1), radius=1.0):
             z = radius*math.sin(lats[i0, i1] * math.pi/180.)
             pt.SetPoint(k, x, y, z)
             k += 1
-    return ac, mp, sg, pt
+    # show edges
+    ed = vtk.vtkExtractEdges()
+    et = vtk.vtkTubeFilter()
+    et.SetRadius(0.001)
+    em = vtk.vtkPolyDataMapper()
+    ea = vtk.vtkActor()
+    ed.SetInputData(sg)
+    et.SetInputConnection(ed.GetOutputPort())
+    em.SetInputConnection(et.GetOutputPort())
+    ea.SetMapper(em)
+    actors = [ac, ea]
+    return actors, mp, sg, pt
 
 def render(actors):
     import vtk
@@ -226,9 +237,12 @@ regrid(srcField, dstField)
 print(dstField.data)
 
 plotField(dstField, 'r-')
-src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.99)
+
+# 3d viz with VTK
 dst_pipeline = plotGrid3d(dstField, color=(0.5, 0., 0.), radius=1.05)
-render([src_pipeline[0], dst_pipeline[0]])
+src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.99)
+render(src_pipeline[0] + dst_pipeline[0])
+
 pylab.show()
 
 
