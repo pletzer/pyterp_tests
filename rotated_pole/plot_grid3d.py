@@ -23,7 +23,7 @@ def readCube(filename):
 			cube = cb
 	return cube
 
-def createPipeline(cube):
+def createPipeline(cube, color=(1.,1.,1.), radius=1.0):
 	cube = readCube(args.src_file)
 	n0, n1 = cube.data.shape
 	numPoints = n0 * n1
@@ -36,19 +36,15 @@ def createPipeline(cube):
 	k = 0
 	for i1 in range(n1):
 		for i0 in range(n0):
-			x = math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
-			y = math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
-			z = math.sin(lats[i0, i1] * math.pi/180.)
+			x = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
+			y = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
+			z = radius * math.sin(lats[i0, i1] * math.pi/180.)
 			pt.SetPoint(k, x, y, z)
 			k += 1
 
 	sg = vtk.vtkStructuredGrid()
 	sg.SetDimensions(1, n0, n1)
 	sg.SetPoints(pt)
-	mp = vtk.vtkDataSetMapper()
-	mp.SetInputData(sg)
-	ac = vtk.vtkActor()
-	ac.SetMapper(mp)
 	# show the grid as tubes
 	ed = vtk.vtkExtractEdges()
         et = vtk.vtkTubeFilter()
@@ -59,10 +55,13 @@ def createPipeline(cube):
 	et.SetInputConnection(ed.GetOutputPort())
 	em.SetInputConnection(et.GetOutputPort())
 	ea.SetMapper(em)
-	return [ac, ea], mp, sg, pt
+	ea.GetProperty().SetColor(color)
+	return ea, et, ed, em, sg, pt
 		
 src_cube = readCube(args.src_file)
-src_pipeline = createPipeline(src_cube)
+src_pipeline = createPipeline(src_cube, color=(0.0, 1.0, 0.0), radius=0.99)
+dst_cube = readCube(args.dst_file)
+dst_pipeline = createPipeline(dst_cube, color=(1.0, 0.0, 0.0), radius=1.01)
 
 # rendering stuff
 renderer = vtk.vtkRenderer()
@@ -70,7 +69,7 @@ renderWindow = vtk.vtkRenderWindow()
 renderWindow.AddRenderer(renderer)
 renderWindowInteractor = vtk.vtkRenderWindowInteractor()
 renderWindowInteractor.SetRenderWindow(renderWindow)
-for a in src_pipeline[0]:
+for a in [src_pipeline[0], dst_pipeline[0]]:
 	renderer.AddActor(a)
 renderer.SetBackground(.0, .0, .0)
 renderWindow.Render()

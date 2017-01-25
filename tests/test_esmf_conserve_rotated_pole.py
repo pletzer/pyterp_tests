@@ -167,7 +167,7 @@ def plotGrid3d(field, color=(0.5, 0.1, 0.1), radius=1.0):
     # show edges
     ed = vtk.vtkExtractEdges()
     et = vtk.vtkTubeFilter()
-    et.SetRadius(0.001)
+    et.SetRadius(0.01)
     em = vtk.vtkPolyDataMapper()
     ea = vtk.vtkActor()
     ed.SetInputData(sg)
@@ -192,7 +192,7 @@ def render(actors):
     renderWindowInteractor.Start()
 
 # set the src/dst grid dimensions
-srcPointDims = (100 + 1, 200 + 1)
+srcPointDims = (20 + 1, 40 + 1)
 dstPointDims = (5 + 1, 10 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)
