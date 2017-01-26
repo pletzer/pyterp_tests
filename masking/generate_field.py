@@ -38,11 +38,21 @@ def generateCoordsAndData(nj, ni, delta_lat, delta_lon,
                                           delta_lon=delta_lon)
     print('min/max lats: {} {}'.format(lats.min(), lats.max()))
     print('min/max lons: {} {}'.format(lons.min(), lons.max()))
+
     pointData = grid_mapper.createPointData(lats, lons)
+
+    # add masking 
+    pointMask = numpy.ones(pointData.shape, numpy.int)
+    pointMask *= ((lats + 90.0)**2 + ((lons + 180.)/2)**2 < 160.0**2)
+    pointData = numpy.ma.array(pointData, mask=pointMask)
+
     latCells, lonCells, cellData = grid_mapper.createCellData(lats, lons)
 
     pointCube = iris.cube.Cube(pointData, var_name='pointData', 
                                standard_name='air_temperature', cell_methods=None)
+    print(pointCube)
+    print(pointCube.data)
+    print(type(pointCube.data))
     latCoord = iris.coords.AuxCoord(lats, var_name='lat',
                                     standard_name='latitude', units='degrees_north')
     lonCoord = iris.coords.AuxCoord(lons, var_name='lon',
