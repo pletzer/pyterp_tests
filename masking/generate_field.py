@@ -50,9 +50,6 @@ def generateCoordsAndData(nj, ni, delta_lat, delta_lon,
 
     pointCube = iris.cube.Cube(pointData, var_name='pointData', 
                                standard_name='air_temperature', cell_methods=None)
-    print(pointCube)
-    print(pointCube.data)
-    print(type(pointCube.data))
     latCoord = iris.coords.AuxCoord(lats, var_name='lat',
                                     standard_name='latitude', units='degrees_north')
     lonCoord = iris.coords.AuxCoord(lons, var_name='lon',
