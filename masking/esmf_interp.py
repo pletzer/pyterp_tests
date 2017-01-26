@@ -71,31 +71,28 @@ def createData(filename, prefix):
     field = ESMF.Field(grid, name="air_temperature", 
                    staggerloc=ESMF.StaggerLoc.CORNER)
     field.data[...] = cube.data[:]
-    mask = cube.data.mask
+    fillValue = cube.data.fill_value
 
     nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
 
-    return grid, field, nodeDims, mask
+    return grid, field, nodeDims, fillValue
 
 timeStats = {
     'weights': float('nan'),
     'evaluation': float('nan'),
 }
 
-srcGrid, srcData, srcNodeDims, srcMask = createData(src_file, b"src")
-dstGrid, dstData, dstNodeDims, dstMask = createData(dst_file, b"dst")
+srcGrid, srcData, srcNodeDims, srcFillValue = createData(src_file, b"src")
+dstGrid, dstData, dstNodeDims, dstFillValue = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.data.copy()
 dstData.data[...] = -1
 
 # compute the interpolation weights
-print(srcMask)
-
 tic = time.time()
-# NEED TO GET THE FILL VALUE OUT (hardcoding 1.e20 for the time being)
 regrid = ESMF.api.regrid.Regrid(srcData, dstData,
-                                src_mask_values=numpy.array([1.e20]), dst_mask_values=None,
+                                src_mask_values=numpy.array([srcFillValue]), dst_mask_values=None,
                                 regrid_method=ESMF.api.constants.RegridMethod.BILINEAR,
                                 pole_method=None,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
