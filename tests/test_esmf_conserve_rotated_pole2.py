@@ -128,7 +128,7 @@ def plotField(field, linetype='k-'):
     for i in range(0, ni, stepi):
         pylab.plot(lons[i, :], lats[i, :], linetype)
 
-    pylab.pcolormesh(lons, lats, field.data[0,...])
+    pylab.pcolormesh(lons, lats, field.data[0,...], vmin=-180.0, vmax=180.0)
     #pylab.show()
 
 def plotGrid3d(field, color=(0.5, 0.1, 0.1), radius=1.0):
@@ -205,8 +205,8 @@ delta_lat, delta_lon = 10.0, 10.0 #30.0, 20.0
 srcLats2D, srcLons2D = createRotatedPoleCoords(srcLatsPrime, srcLonsPrime, delta_lat, delta_lon)
 
 # target grid is lat-lon
-dstLatsPrime = numpy.linspace(-20., 20, dstPointDims[LAT_INDEX]) #numpy.linspace(-90., 90, dstPointDims[0])
-dstLonsPrime = numpy.linspace(-110., 110, dstPointDims[LON_INDEX]) #numpy.linspace(-180., 180, dstPointDims[1])
+dstLatsPrime = numpy.linspace(-80., 80., dstPointDims[LAT_INDEX]) #numpy.linspace(-90., 90, dstPointDims[0])
+dstLonsPrime = numpy.linspace(-170., 170., dstPointDims[LON_INDEX]) #numpy.linspace(-180., 180, dstPointDims[1])
 dstLats2D, dstLons2D = createRotatedPoleCoords(dstLatsPrime, dstLonsPrime, 0.0, 0.0)
 
 # create the ESMF src/dst grids
@@ -239,7 +239,7 @@ plotField(dstField, 'r-')
 
 # 3d viz with VTK
 dst_pipeline = plotGrid3d(dstField, color=(0.5, 0., 0.), radius=1.05)
-src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.99)
+src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.95)
 render(src_pipeline[0] + dst_pipeline[0])
 
 pylab.show()

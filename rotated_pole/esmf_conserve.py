@@ -10,11 +10,14 @@ import time
 # turn on logging
 esmpy = ESMF.Manager(debug=True)
 
+LAT_INDEX, LON_INDEX = 1, 0
+
 parser = argparse.ArgumentParser(description='Conservatively interpolate using ESMF')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -48,26 +51,25 @@ def createData(filename, prefix):
     lonsPoint = coordsPoint[1].points
     
     # create the ESMF grid object
-    latsIndex, lonsIndex = 0, 1
     cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
     grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.CART) #SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latsIndex)
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonsIndex)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
 
-    coordLatsPoint = grid.get_coords(coord_dim=latsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    coordLonsPoint = grid.get_coords(coord_dim=lonsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLatsPoint = grid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLonsPoint = grid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
 
     # get the local start/end index sets and set the point coordinates
-    iBegLats = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latsIndex]
-    iEndLats = grid.upper_bounds[ESMF.StaggerLoc.CORNER][latsIndex]
-    iBegLons = grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonsIndex]
-    iEndLons = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonsIndex]
+    iBeg0 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iEnd0 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iBeg1 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    iEnd1 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
     # NEED TO CHECK ORDERING!!!
-    coordLatsPoint[...] = latsPoint[iBegLats:iEndLats, iBegLons:iEndLons]
-    coordLonsPoint[...] = lonsPoint[iBegLats:iEndLats, iBegLons:iEndLons]
+    coordLatsPoint[...] = latsPoint[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLonsPoint[...] = lonsPoint[iBeg0:iEnd0, iBeg1:iEnd1]
 
     # local sizes
-    nodeDims = (iEndLats - iBegLats, iEndLons - iBegLons)
+    nodeDims = (iEnd0 - iBeg0, iEnd1 - iBeg1)
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
@@ -104,6 +106,7 @@ timeStats['weights'] = time.time() - tic
 # interpolate
 tic = time.time()
 regrid(srcData, dstData)
+print(dstData.data)
 
 timeStats['evaluation'] = time.time() - tic
 
@@ -127,12 +130,12 @@ checksum = numpy.sum(dstData.data, axis=None)
 print('check sum: {:.15g}'.format(checksum))
 
 # plot
-latsIndex, lonsIndex = 0, 1
-xPoint = dstGrid.get_coords(coord_dim=latsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-yPoint = dstGrid.get_coords(coord_dim=lonsIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint[0:-1, 1:])
-yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint[0:-1, 1:])
+if args.plot:
+    xPoint = dstGrid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
+    yPoint = dstGrid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
+    xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint[0:-1, 1:])
+    yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint[0:-1, 1:])
 
-from matplotlib import pylab
-pylab.pcolor(xxCell, yyCell, dstData.data, vmin=-1.0, vmax=1.0)
-pylab.show()
+    from matplotlib import pylab
+    pylab.pcolor(xxCell, yyCell, dstData.data, vmin=-1.0, vmax=1.0)
+    pylab.show()
