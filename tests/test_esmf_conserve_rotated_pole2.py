@@ -191,8 +191,8 @@ def render(actors):
     renderWindowInteractor.Start()
 
 # set the src/dst grid dimensions
-srcPointDims = (40 + 1, 20 + 1)
-dstPointDims = (10 + 1, 5 + 1)
+srcPointDims = (100 + 1, 200 + 1)
+dstPointDims = (100 + 1, 200 + 1)
 
 srcCellDims = (srcPointDims[0] - 1, srcPointDims[1] - 1)
 dstCellDims = (dstPointDims[0] - 1, dstPointDims[1] - 1)
@@ -205,8 +205,8 @@ delta_lat, delta_lon = 10.0, 10.0 #30.0, 20.0
 srcLats2D, srcLons2D = createRotatedPoleCoords(srcLatsPrime, srcLonsPrime, delta_lat, delta_lon)
 
 # target grid is lat-lon
-dstLatsPrime = numpy.linspace(-80., 80., dstPointDims[LAT_INDEX]) #numpy.linspace(-90., 90, dstPointDims[0])
-dstLonsPrime = numpy.linspace(-170., 170., dstPointDims[LON_INDEX]) #numpy.linspace(-180., 180, dstPointDims[1])
+dstLatsPrime = numpy.linspace(-89., 89., dstPointDims[LAT_INDEX]) #numpy.linspace(-90., 90, dstPointDims[0])
+dstLonsPrime = numpy.linspace(-179., 179., dstPointDims[LON_INDEX]) #numpy.linspace(-180., 180, dstPointDims[1])
 dstLats2D, dstLons2D = createRotatedPoleCoords(dstLatsPrime, dstLonsPrime, 0.0, 0.0)
 
 # create the ESMF src/dst grids
@@ -230,8 +230,8 @@ plotField(srcField, 'g-')
 regrid = ESMF.Regrid(srcfield=srcField, dstfield=dstField,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
                      unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
-#regri5
 regrid(srcField, dstField)
+print('check sum: {}'.format(dstField.data.sum()))
 
 print(dstField.data)
 

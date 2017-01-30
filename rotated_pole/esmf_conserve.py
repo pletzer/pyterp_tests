@@ -52,7 +52,7 @@ def createData(filename, prefix):
     
     # create the ESMF grid object
     cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
-    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.CART) #SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
+    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
 
@@ -91,6 +91,10 @@ dstData.data[...] = -1
 
 # compute the interpolation weights
 tic = time.time()
+regrid = ESMF.Regrid(srcfield=srcData, dstfield=dstData,
+                     regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
+                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
+"""
 regrid = ESMF.api.regrid.Regrid(srcData, dstData,
                                 src_mask_values=None, dst_mask_values=None,
                                 regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
@@ -101,6 +105,7 @@ regrid = ESMF.api.regrid.Regrid(srcData, dstData,
                                 unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE, 
                                 ignore_degenerate=True, # produce an error if two points are degenerate and if set to False
                                 src_frac_field=None, dst_frac_field=None)
+"""
 timeStats['weights'] = time.time() - tic
 
 # interpolate
