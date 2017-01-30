@@ -70,13 +70,13 @@ def generateCoordsAndData(nj, ni, delta_lat, delta_lon,
     return iris.cube.CubeList([pointCube, cellCube])
 
 parser = argparse.ArgumentParser(description='Generate uniform data in 2d')
-parser.add_argument('--src_nj', type=int, dest='src_nj', default=2, 
+parser.add_argument('--src_nj', type=int, dest='src_nj', default=11, 
                     help='Source latitude axis dimension')
-parser.add_argument('--src_ni', type=int, dest='src_ni', default=2, 
+parser.add_argument('--src_ni', type=int, dest='src_ni', default=21, 
                     help='Source longitude axis dimension')
-parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=11, 
+parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=101, 
                     help='Destination latitude axis dimension')
-parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=21, 
+parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=201, 
                     help='Destination longitude axis dimension')
 parser.add_argument('--delta_lat', type=float, dest='delta_lat', default=0.0, 
                     help='Pole displacement in latitude')
