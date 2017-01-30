@@ -76,6 +76,15 @@ def createData(filename, prefix):
     assert(ier == pycf.NC_NOERR)
     fillValue = fillValuePtr.contents
 
+    # create validmask array and apply the mask to the grid
+    dims = (c_int*2)()
+    ier = pycf.nccf.nccf_inq_data_dims(dataId, dims)
+    assert(ier == 0)
+    dataVals = numpy.ctypeslib.as_array(dataPtr, shape=tuple(dims))
+    validmask = numpy.array(dataVals != fillValue, numpy.int32)
+    ier = pycf.nccf.nccf_set_grid_validmask(gridId, validmask.ctypes.data_as(POINTER(c_int)))
+    assert(ier == pycf.NC_NOERR)
+
     # fix topology
     #ier = pycf.nccf.nccf_fix_grid_periodic_topology(gridId)
 
