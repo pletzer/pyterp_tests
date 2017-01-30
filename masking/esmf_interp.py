@@ -111,8 +111,13 @@ timeStats['evaluation'] = time.time() - tic
 # compute error
 srcNtot = len(srcData.data.flat)
 dstNtot = len(dstData.data.flat)
-# TO FIX
-error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
+
+# compute error
+# could be using dstDataRef for the masking?
+errorSum = numpy.sum((dstData.data != srcFillValue) * abs(dstData.data - dstDataRef))
+numValidDstNodes = numpy.sum(dstData.data != srcFillValue)
+error = errorSum / numValidDstNodes
+
 print('emsf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))

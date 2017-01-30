@@ -233,7 +233,12 @@ srcNtot, srcDims = inquireDataSizes(srcDataId)
 dstNtot, dstDims = inquireDataSizes(dstDataId)
 
 # compute error
-error =  numpy.sum(abs(dstDataInterp - dstDataRef)) / float(dstNtot)
+fillValue = 1e20
+# could be using dstDataRef for the masking?
+errorSum = numpy.sum((dstDataInterp != fillValue) * abs(dstDataInterp - dstDataRef))
+numValidDstNodes = numpy.sum(dstDataInterp != fillValue)
+error = errorSum / numValidDstNodes
+
 print('libcf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
 print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
