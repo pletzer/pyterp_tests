@@ -11,8 +11,11 @@ This repository contains curvilinear interpolation tests.
  * ESMF/ESMPy 7.0.0 or later [https://www.earthsystemcog.org/projects/esmpy/]
      
 Typical build instructions on Linux
+
 ```cd esmf; export ESMF_DIR=$PWD; export ESMF_COMM=mpich2; export ESMF_INSTALL_PREFIX=<path-to-esmf>```
+
 ```make; make install```
+
 ```cd src/addon/ESMPy/; python setup.py build --ESMFMKFILE=<path-to-esmf>/lib/libO/<platform>/esmf.mk install```
      
  * libcf/pycf 1.6.5 or later. Install with `pip install pycf`
