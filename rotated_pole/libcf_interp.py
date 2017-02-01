@@ -95,28 +95,25 @@ def inquireDataSizes(dataId):
     return ntot, dims
 
 def getDataAsArray(dataId):
-    xtypep = c_int()
+    xtype = c_int()
     dataPtr = POINTER(c_double)()
     fillValuePtr = c_void_p()
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
+    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
                                           byref(dataPtr), byref(fillValuePtr))
     assert(ier == pycf.NC_NOERR)
-    assert(xtypep.value == pycf.NC_DOUBLE)
+    assert(xtype.value == pycf.NC_DOUBLE)
     ntot, dims = inquireDataSizes(dataId)
     data = numpy.ctypeslib.as_array(dataPtr, shape=(ntot,))
     # return a copy
     return data.copy()
 
 def initializeData(dataId, value):
-    xtypep = c_int()
+    xtype = c_int()
     fillValuePtr = c_void_p()
 
     dataPtr = POINTER(c_double)()
 
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
-                                          byref(dataPtr), byref(fillValuePtr))
-    assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
+    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
                                           byref(dataPtr), byref(fillValuePtr))
     assert(ier == pycf.NC_NOERR)
 
@@ -125,17 +122,14 @@ def initializeData(dataId, value):
     data[...] = value
 
 def getGridAndData(dataId):
-    xtypep = c_int()
+    xtype = c_int()
     fillValuePtr = c_void_p()
     gridId = c_int()
     coordIds = (c_int * ndims)()
     dataPtr = POINTER(c_double)()
     latPtr = POINTER(c_double)()
     lonPtr = POINTER(c_double)()
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
-                                          byref(dataPtr), byref(fillValuePtr))
-    assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtypep),
+    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
                                           byref(dataPtr), byref(fillValuePtr))
     assert(ier == pycf.NC_NOERR)
     ier = pycf.nccf.nccf_inq_data_gridid(dataId, byref(gridId))
