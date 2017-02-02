@@ -23,6 +23,8 @@ parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-6,
 parser.add_argument('--nitermax', type=int, dest='nitermax', default=1000,
                     help='Max number of iterations')
 parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
+parser.add_argument('--out_file', type=str, dest='out_file', default='dst_regridded.nc',
+                    help='Destination file with regridded field')
 
 args = parser.parse_args()
 
@@ -78,12 +80,13 @@ def createData(filename, prefix, fieldname, maskFlag=False):
     assert(ier == pycf.NC_NOERR)
 
     # set the data
-    save = 1
+    save = 0
     fillValue = c_double(FILL_VALUE) # pycf.NC_FILL_DOUBLE)
     ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)),
                                          save, fillValue)
     assert(ier == pycf.NC_NOERR)
 
+    """
     # get pointer to the array
     dataPtr = POINTER(c_double)()
     xtype = c_int()
@@ -91,19 +94,21 @@ def createData(filename, prefix, fieldname, maskFlag=False):
     ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
                                           byref(dataPtr), byref(fillValuePtr))
     assert(ier == pycf.NC_NOERR)
+    """
 
     # create a numpy array from that pointer
-    array = numpy.ctypeslib.as_array(dataPtr, shape=cube.data.shape)
+    array = cube.data # numpy.ctypeslib.as_array(dataPtr, shape=cube.data.shape)
 
     # apply the mask to the src grid
     if maskFlag:
         validmask = numpy.array(array < 1.e20, numpy.int32)
         print(validmask.sum())
-        ier = pycf.nccf.nccf_set_grid_validmask(gridId, validmask.ctypes.data_as(POINTER(c_int)))
+        ier = pycf.nccf.nccf_set_grid_validmask(gridId,
+                                                validmask.ctypes.data_as(POINTER(c_int)))
         assert(ier == pycf.NC_NOERR)
 
     return {'gridId': gridId, 'dataId': dataId, 'data': array, 
-            'lats': lats, 'lons': lons}
+            'lats': lats, 'lons': lons, 'cube': cube}
 
 
 def destroyData(dataId):
@@ -211,6 +216,10 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 if args.plot:
     plotData(dst)
+
+if args.out_file:
+    # write the interpolated data to file
+    iris.save([dst['cube']], args.out_file)
 
 # clean up
 destroyData(src['dataId'])
