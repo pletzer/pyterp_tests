@@ -72,7 +72,19 @@ def createData(filename, prefix):
     ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)))
     assert(ier == pycf.NC_NOERR)
 
-    return gridId, dataId
+    # get a pointer to the array
+    dataPtr = POINTER(c_double)()
+    xtype = c_int()
+    fillValuePtr = c_void_p()
+    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
+                                          byref(dataPtr), byref(fillValuePtr))
+    assert(ier == pycf.NC_NOERR)
+
+    # create a numpy array from that pointer
+    array = numpy.ctypeslib.as_array(dataPtr, shape=cube.data.shape)
+
+
+    return {'gridId': gridId, 'dataId': dataId, 'dataArray': array, 'lats': lats, 'lons': lons}
 
 
 def destroyData(dataId):
@@ -91,77 +103,14 @@ def destroyData(dataId):
         ier = pycf.nccf.nccf_free_coord(coordIds[i])
         assert(ier == pycf.NC_NOERR)
 
-def inquireDataSizes(dataId):
-    dims = (c_int * ndims)()
-    ier = pycf.nccf.nccf_inq_data_dims(dataId, dims)
-    assert(ier == pycf.NC_NOERR)
-    ntot = reduce(lambda x, y: x*y, dims[:], 1)
-    return ntot, dims
-
-def getDataAsArray(dataId):
-    xtype = c_int()
-    dataPtr = POINTER(c_double)()
-    fillValuePtr = c_void_p()
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
-                                          byref(dataPtr), byref(fillValuePtr))
-    assert(ier == pycf.NC_NOERR)
-    assert(xtype.value == pycf.NC_DOUBLE)
-    ntot, dims = inquireDataSizes(dataId)
-    data = numpy.ctypeslib.as_array(dataPtr, shape=(ntot,))
-    # return a copy
-    return data.copy()
-
-def initializeData(dataId, value):
-    xtype = c_int()
-    fillValuePtr = c_void_p()
-
-    dataPtr = POINTER(c_double)()
-
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
-                                          byref(dataPtr), byref(fillValuePtr))
-    assert(ier == pycf.NC_NOERR)
-
-    ntot, dims = inquireDataSizes(dataId)
-    data = numpy.ctypeslib.as_array(dataPtr, shape=tuple(dims))
-    data[...] = value
-
-def getGridAndData(dataId):
-    xtype = c_int()
-    fillValuePtr = c_void_p()
-    gridId = c_int()
-    coordIds = (c_int * ndims)()
-    dataPtr = POINTER(c_double)()
-    latPtr = POINTER(c_double)()
-    lonPtr = POINTER(c_double)()
-    ier = pycf.nccf.nccf_get_data_pointer(dataId, byref(xtype),
-                                          byref(dataPtr), byref(fillValuePtr))
-    assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_inq_data_gridid(dataId, byref(gridId))
-    assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_inq_grid_coordids (gridId, coordIds)
-    assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_get_coord_data_pointer(coordIds[0], byref(latPtr))
-    assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_get_coord_data_pointer(coordIds[1], byref(lonPtr))
-    assert(ier == pycf.NC_NOERR)
-    ntot, dims = inquireDataSizes(dataId)
-    data = numpy.ctypeslib.as_array(dataPtr, shape=tuple(dims))
-    lats = numpy.ctypeslib.as_array(latPtr, shape=tuple(dims))
-    lons = numpy.ctypeslib.as_array(lonPtr, shape=tuple(dims))
-
-    return lats, lons, data
-
-
-def printInvalidDataPoints(dataId, fillValue):
-    lats, lons, data = getGridAndData(dataId)
+def printInvalidDataPoints(lats, lons, data, fillValue):
     badLats = lats[data == fillValue]
     badLons = lons[data == fillValue]
     for i in range(len(badLats)):
         print('invalid point: lat = {:.10f} lon = {:.10f}'.format(badLats[i], badLons[i]))
 
-def plotData(dataId):
+def plotData(lats, lons, data):
     from matplotlib import pylab
-    lats, lons, data = getGridAndData(dataId)
     pylab.pcolor(lons, lats, data)
     pylab.show()
 
@@ -171,12 +120,12 @@ timeStats = {
     'evaluation': float('nan'),
 }
 
-srcGridId, srcDataId = createData(src_file, b"src")
-dstGridId, dstDataId = createData(dst_file, b"dst")
+src = createData(src_file, b"src")
+dst = createData(dst_file, b"dst")
 
 # compute the interpolation weights
 regridId = c_int()
-ier = pycf.nccf.nccf_def_regrid(srcGridId, dstGridId, byref(regridId))
+ier = pycf.nccf.nccf_def_regrid(src['gridId'], dst['gridId'], byref(regridId))
 assert(ier == pycf.NC_NOERR)
 nitermax = c_int(args.nitermax)
 tolpos = c_double(args.tolpos)
@@ -194,25 +143,25 @@ ier = pycf.nccf.nccf_inq_regrid_nvalid(regridId, byref(nvalid))
 assert(ier == pycf.NC_NOERR)
 
 # store the reference data values
-dstDataRef = getDataAsArray(dstDataId)
+dstDataRef = dst['dataArray'].copy()
 
 # initialize the data
-initializeData(dstDataId, -2.0)
+dst['dataArray'][...] = -2.0
 
 # interpolate
 tic = time.time()
-ier = pycf.nccf.nccf_apply_regrid(regridId, srcDataId, dstDataId)
+ier = pycf.nccf.nccf_apply_regrid(regridId, src['dataId'], dst['dataId'])
 toc = time.time()
 assert(ier == pycf.NC_NOERR)
 timeStats['evaluation'] = toc - tic
 
-dstDataInterp = getDataAsArray(dstDataId)
-
-srcNtot, srcDims = inquireDataSizes(srcDataId)
-dstNtot, dstDims = inquireDataSizes(dstDataId)
+srcDims = src['dataArray'].shape
+srcNtot = srcDims[0] * srcDims[1]
+dstDims = dst['dataArray'].shape
+dstNtot = dstDims[0] * dstDims[1]
 
 # compute error
-error =  numpy.sum(abs(dstDataInterp - dstDataRef)) / float(dstNtot)
+error =  numpy.sum(abs(dst['dataArray'] - dstDataRef)) / float(dstNtot)
 print('libcf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcDims[:], srcNtot))
 print('\tdst: {} ntot: {}'.format(dstDims[:], dstNtot))
@@ -220,7 +169,7 @@ ninvalid = dstNtot - nvalid.value
 print('\t     # invalid points: {} ({:.3f}%)'.format(ninvalid,
                                                100*ninvalid/float(dstNtot)))
 
-printInvalidDataPoints(dstDataId, fillValue=-2.0)
+printInvalidDataPoints(dst['lats'], dst['lons'], dst['dataArray'], fillValue=-2.0)
 
 
 print('interpolation error: {:.3g}'.format(error))
@@ -232,8 +181,8 @@ for k, v in timeStats.items():
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 if args.plot:
-    plotData(dstDataId)
+    plotData(dst['lats'], dst['lons'], dst['dataArray'])
 
 # clean up
-destroyData(srcDataId)
-destroyData(dstDataId)
+destroyData(src['dataId'])
+destroyData(dst['dataId'])
