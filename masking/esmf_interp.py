@@ -35,7 +35,7 @@ src_file = args.src_file.encode('UTF-8') # python3
 dst_file = args.dst_file.encode('UTF-8') # python3
 ndims = 2
 
-def createData(filename, prefix):
+def createData(filename, prefix, set_mask=False):
     # use iris to read in the data
     # then pass the array to the ESMF API
     cubes = iris.load(filename)
@@ -73,7 +73,13 @@ def createData(filename, prefix):
     field = ESMF.Field(grid, name="air_temperature", 
                    staggerloc=ESMF.StaggerLoc.CORNER)
     field.data[...] = cube.data # cube.data is either a masked array or a ndarray (if no _FillValue)
-    fillValue = cube.data.fill_value
+    
+    # add the masking
+    fillValue = 1e20
+    if set_mask and numpy.ma.is_masked(cube.data):
+        mask = grid.add_item(ESMF.GridItem.MASK, staggerloc=ESMF.StaggerLoc.CORNER)
+        mask[...] = numpy.ma.getmaskarray(cube.data).astype(numpy.int)[...]
+        fillValue = cube.data.fill_value
 
     nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
 
@@ -84,17 +90,17 @@ timeStats = {
     'evaluation': float('nan'),
 }
 
-srcGrid, srcData, srcNodeDims, srcFillValue, srcCubes = createData(src_file, b"src")
+srcGrid, srcData, srcNodeDims, srcFillValue, srcCubes = createData(src_file, b"src", set_mask=True)
 dstGrid, dstData, dstNodeDims, dstFillValue, dstCubes = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.data.copy()
-dstData.data[...] = -1
+dstData.data[...] = srcFillValue
 
 # compute the interpolation weights
 tic = time.time()
 regrid = ESMF.api.regrid.Regrid(srcData, dstData,
-                                src_mask_values=numpy.array([srcFillValue]), dst_mask_values=None,
+                                src_mask_values=numpy.array([1]), dst_mask_values=None,
                                 regrid_method=ESMF.api.constants.RegridMethod.BILINEAR,
                                 pole_method=None,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
@@ -107,7 +113,7 @@ timeStats['weights'] = time.time() - tic
 
 # interpolate
 tic = time.time()
-regrid(srcData, dstData)
+regrid(srcData, dstData, zero_region=ESMF.Region.SELECT)
 timeStats['evaluation'] = time.time() - tic
 
 # compute error
