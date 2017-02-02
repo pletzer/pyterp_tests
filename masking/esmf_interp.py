@@ -143,7 +143,8 @@ if args.plot:
     lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
     lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
     from matplotlib import pylab
-    p = pylab.pcolor(lons, lats, dstData.data)
+    msk = (dstData.data == 1.e20)
+    p = pylab.pcolor(lons, lats, numpy.ma.array(dstData.data, mask=msk))
     pylab.colorbar(p)
     pylab.show()
 
