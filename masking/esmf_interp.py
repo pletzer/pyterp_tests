@@ -15,6 +15,8 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--out_file', type=str, dest='out_file', default='dst_regridded.nc',
+                    help='Destination file with regridded field')
 parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
@@ -144,7 +146,7 @@ for cb in dstCubes:
     if cb.var_name == 'pointData':
         cube = cb
 cube.data = numpy.ma.masked_values(dstData.data, srcFillValue)
-iris.save(dstCubes, "dst_regridded.nc")
+iris.save(dstCubes, args.out_file)
 
 # clean up
 # nothing to do
