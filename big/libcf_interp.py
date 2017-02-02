@@ -74,7 +74,10 @@ def createData(filename, prefix, fieldname):
     dataname = fieldname
     ier = pycf.nccf.nccf_def_data(gridId, dataname, cube.standard_name, cube.units, None, byref(dataId))
     assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)))
+    save = 1
+    fillValue = c_double(pycf.NC_FILL_DOUBLE)
+    ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double))
+                                         save, fillValue)
     assert(ier == pycf.NC_NOERR)
 
     # get a pointer to the array
