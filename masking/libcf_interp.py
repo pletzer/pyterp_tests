@@ -80,7 +80,7 @@ def createData(filename, prefix, fieldname, maskFlag=False):
     assert(ier == pycf.NC_NOERR)
 
     # set the data
-    save = 0
+    save = 0 # python holds the data and will take care of releasing the memory
     fillValue = c_double(FILL_VALUE) # pycf.NC_FILL_DOUBLE)
     ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)),
                                          save, fillValue)
