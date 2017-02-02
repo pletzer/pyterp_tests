@@ -143,7 +143,8 @@ if args.plot:
     lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
     lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
     from matplotlib import pylab
-    pylab.pcolor(lons, lats, dstData.data)
+    p = pylab.pcolor(lons, lats, dstData.data)
+    pylab.colorbar(p)
     pylab.show()
 
 # write interpolated data

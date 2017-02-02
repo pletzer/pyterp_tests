@@ -100,6 +100,9 @@ if args.dst_file is '':
     parser.print_help()
     sys.exit(1)
 
+print('src grid: {} x {}'.format(args.src_nj, args.src_ni))
+print('dst grid: {} x {}'.format(args.dst_nj, args.dst_ni)) 
+
 # save the result
 srcCubes = generateCoordsAndData(args.src_nj, args.src_ni, args.delta_lat, args.delta_lon,
                                  latMin=-90.0, latMax=90.0,

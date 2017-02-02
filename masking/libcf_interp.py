@@ -183,7 +183,9 @@ def printInvalidDataPoints(dataId, fillValue):
 def plotData(dataId):
     from matplotlib import pylab
     lats, lons, data = getGridAndData(dataId)
-    pylab.pcolor(lons, lats, data)
+    msk = (data == 1.e20)
+    p = pylab.pcolor(lons, lats, numpy.ma.array(data, mask=msk))
+    pylab.colorbar(p)
     pylab.show()
 
 
