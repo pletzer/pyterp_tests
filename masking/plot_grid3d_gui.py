@@ -13,7 +13,6 @@ import iris
 import numpy as np
 from PyQt5 import QtWidgets, QtCore
 import vtk
-from vtk.util import numpy_support
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
@@ -36,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resolution = 16
         # TODO: these should depend on number of grid points
         self.src_field_radius = 0.02
-        self.dst_field_radius = 0.02
+        self.dst_field_radius = 0.01
         
         # VTK window
         self._vtkWidget = QVTKRenderWindowInteractor()

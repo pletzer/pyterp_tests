@@ -39,7 +39,7 @@ def generateCoordsAndData(nj, ni, delta_lat, delta_lon,
     print('min/max lats: {} {}'.format(lats.min(), lats.max()))
     print('min/max lons: {} {}'.format(lons.min(), lons.max()))
 
-    pointData = grid_mapper.createPointData(lats, lons)
+    pointData = grid_mapper.createPointData(lats, lons, expr="0.*lats+1.")
 
     # add masking 
     pointMask = numpy.ones(pointData.shape, numpy.int)

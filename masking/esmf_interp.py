@@ -75,15 +75,15 @@ def createData(filename, prefix):
 
     nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
 
-    return grid, field, nodeDims, fillValue
+    return grid, field, nodeDims, fillValue, cubes
 
 timeStats = {
     'weights': float('nan'),
     'evaluation': float('nan'),
 }
 
-srcGrid, srcData, srcNodeDims, srcFillValue = createData(src_file, b"src")
-dstGrid, dstData, dstNodeDims, dstFillValue = createData(dst_file, b"dst")
+srcGrid, srcData, srcNodeDims, srcFillValue, srcCubes = createData(src_file, b"src")
+dstGrid, dstData, dstNodeDims, dstFillValue, dstCubes = createData(dst_file, b"dst")
 
 # save the reference (exact) field data
 dstDataRef = dstData.data.copy()
@@ -137,6 +137,14 @@ if args.plot:
     from matplotlib import pylab
     pylab.pcolor(lons, lats, dstData.data)
     pylab.show()
+
+# write interpolated data
+cube = None
+for cb in dstCubes:
+    if cb.var_name == 'pointData':
+        cube = cb
+cube.data = numpy.ma.masked_values(dstData.data, srcFillValue)
+iris.save(dstCubes, "dst_regridded.nc")
 
 # clean up
 # nothing to do
