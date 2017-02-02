@@ -9,6 +9,8 @@ from functools import reduce
 import time
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
+parser.add_argument('--src_field', type=str, dest='src_field', default='pointData',
+                    help='Name of the source field')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
@@ -33,15 +35,16 @@ if args.dst_file is '':
 
 src_file = args.src_file.encode('UTF-8') # python3
 dst_file = args.dst_file.encode('UTF-8') # python3
+src_field = args.src_field.encode('UTF-8') # python3
 ndims = 2
 
-def createData(filename, prefix):
+def createData(filename, prefix, fieldname):
     # use iris to read in the data
     # then pass the array to create libcf objects
     cubes = iris.load(filename)
     cube = None
     for cb in cubes:
-        if cb.var_name == 'pointData':
+        if cb.var_name == fieldname:
             cube = cb
     coords = cube.coords()
     lats = coords[0].points
@@ -66,7 +69,7 @@ def createData(filename, prefix):
 
     # create the data
     dataId = c_int()
-    dataname = 'pointData'
+    dataname = fieldname
     ier = pycf.nccf.nccf_def_data(gridId, dataname, 'temperature', 'K', None, byref(dataId))
     assert(ier == pycf.NC_NOERR)
     ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)))
@@ -120,8 +123,8 @@ timeStats = {
     'evaluation': float('nan'),
 }
 
-src = createData(src_file, b"src")
-dst = createData(dst_file, b"dst")
+src = createData(src_file, b"src", args.src_field)
+dst = createData(dst_file, b"dst", args.src_field)
 
 # compute the interpolation weights
 regridId = c_int()
