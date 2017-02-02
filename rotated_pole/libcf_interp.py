@@ -1,5 +1,6 @@
 from __future__ import print_function
 import pycf
+import iris
 import numpy
 import sys
 from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
@@ -35,41 +36,44 @@ dst_file = args.dst_file.encode('UTF-8') # python3
 ndims = 2
 
 def createData(filename, prefix):
+    # use iris to read in the data
+    # then pass the array to create libcf objects
+    cubes = iris.load(filename)
+    cube = None
+    for cb in cubes:
+        if cb.var_name == 'pointData':
+            cube = cb
+    coords = cube.coords()
+    lats = coords[0].points
+    lons = coords[1].points
+    
+    # create coordinates
+    save = 1 # copy and save
+    latId, lonId = c_int(), c_int()
+    dims = (c_int * 2)(lats.shape[0], lats.shape[1])
+    dimNames = (c_char_p * 2)("y", "x")
+    ier = pycf.nccf.nccf_def_lat_coord(ndims, dims, dimNames, lats.ctypes.data_as(POINTER(c_double)), save, byref(latId))
+    assert(ier == pycf.NC_NOERR)
+    ier = pycf.nccf.nccf_def_lon_coord(ndims, dims, dimNames, lons.ctypes.data_as(POINTER(c_double)), save, byref(lonId))
+    assert(ier == pycf.NC_NOERR)
 
-    latCoordId = c_int()
-    lonCoordId = c_int()
+    # create the grid
     gridId = c_int()
+    coordIds = (c_int * 2)(latId.value, lonId.value)
+    gridname = prefix + 'grid'
+    ier = pycf.nccf.nccf_def_grid(coordIds, gridname, byref(gridId))
+    assert(ier == pycf.NC_NOERR)
+
+    # create the data
     dataId = c_int()
-
-    ier = pycf.nccf.nccf_def_coord_from_file(filename, 
-                                             b"lat",
-                                             byref(latCoordId))
+    dataname = 'pointData'
+    ier = pycf.nccf.nccf_def_data(gridId, dataname, 'temperature', 'K', None, byref(dataId))
     assert(ier == pycf.NC_NOERR)
-    ier = pycf.nccf.nccf_def_coord_from_file(filename, 
-                                             b"lon",
-                                             byref(lonCoordId))
+    ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)))
     assert(ier == pycf.NC_NOERR)
-
-    coordIds = (c_int * ndims)(latCoordId, lonCoordId)
-    gridId = c_int()
-    ier = pycf.nccf.nccf_def_grid(coordIds, prefix + b"grid", byref(gridId))
-    assert(ier == pycf.NC_NOERR)
-
-    periodicity_lengths = (c_double * ndims)()
-    ier = pycf.nccf.nccf_inq_grid_periodicity(gridId, periodicity_lengths)
-    assert(ier == pycf.NC_NOERR)
-    print('periodicity lengths: {}'.format(periodicity_lengths[:]))
-
-    dataId = c_int()
-    read_data = 1
-    ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"pointData",
-                                            read_data, byref(dataId))
-    assert(ier == pycf.NC_NOERR)
-
-    # fix topology
-    #ier = pycf.nccf.nccf_fix_grid_periodic_topology(gridId)
 
     return gridId, dataId
+
 
 def destroyData(dataId):
     gridId = c_int()

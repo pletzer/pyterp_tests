@@ -238,9 +238,9 @@ print(dstField.data)
 plotField(dstField, 'r-')
 
 # 3d viz with VTK
-dst_pipeline = plotGrid3d(dstField, color=(0.5, 0., 0.), radius=1.05)
-src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.95)
-render(src_pipeline[0] + dst_pipeline[0])
+#dst_pipeline = plotGrid3d(dstField, color=(0.5, 0., 0.), radius=1.05)
+#src_pipeline = plotGrid3d(srcField, color=(0., 0.5, 0.), radius=0.95)
+#render(src_pipeline[0] + dst_pipeline[0])
 
 pylab.show()
 
