@@ -133,7 +133,7 @@ def plotData(srcOrDst):
     lats = srcOrDst['lats']
     lons = srcOrDst['lons']
     data = srcOrDst['data']
-    msk = (data == 1e20)
+    msk = (data == FILL_VALUE)
     mdata = numpy.ma.array(data, mask=msk)
     p = pylab.pcolor(lons, lats, mdata)
     pylab.colorbar(p)
