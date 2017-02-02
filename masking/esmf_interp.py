@@ -100,7 +100,7 @@ dstData.data[...] = srcFillValue
 # compute the interpolation weights
 tic = time.time()
 regrid = ESMF.api.regrid.Regrid(srcData, dstData,
-                                src_mask_values=numpy.array([1]), dst_mask_values=None,
+                                src_mask_values=numpy.array([1]), dst_mask_values=None, # 1 means masked (invalid) in our case
                                 regrid_method=ESMF.api.constants.RegridMethod.BILINEAR,
                                 pole_method=None,
                                 regrid_pole_npoints=None, # only relevant if method is ALLAVG
