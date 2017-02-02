@@ -23,6 +23,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, srcFile, dstFile):
         super(MainWindow, self).__init__()
         
+        # title
+        self.setWindowTitle("src: '%s'; dst: '%s'" % (srcFile, dstFile))
+        
         # resize window
         self.resize(QtCore.QSize(1000, 600))
         
