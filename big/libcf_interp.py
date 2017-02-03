@@ -10,7 +10,7 @@ import time
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
 parser.add_argument('--src_file', type=str, dest='src_file', 
-                    default='coords_CF_ORCA12_GO6.nc',
+                    default='coords_CF_ORCA12_GO6-2.nc',
                     help='Source data file name')
 parser.add_argument('--src_field', type=str, dest='src_field', 
                     default='ocndept',
@@ -72,12 +72,10 @@ def createData(filename, prefix, fieldname):
     # create the data
     dataId = c_int()
     dataname = fieldname
-    ier = pycf.nccf.nccf_def_data(gridId, dataname, cube.standard_name, cube.units, None, byref(dataId))
+    ier = pycf.nccf.nccf_def_data(gridId, dataname, cube.standard_name, 
+                                  str(cube.units), None, byref(dataId))
     assert(ier == pycf.NC_NOERR)
-    save = 1
-    fillValue = c_double(pycf.NC_FILL_DOUBLE)
-    ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double))
-                                         save, fillValue)
+    ier = pycf.nccf.nccf_set_data_double(dataId, cube.data.ctypes.data_as(POINTER(c_double)))
     assert(ier == pycf.NC_NOERR)
 
     # get a pointer to the array
@@ -129,7 +127,7 @@ timeStats = {
 }
 
 src = createData(src_file, b"src", args.src_field)
-dst = createData(dst_file, b"dst", args.src_field)
+dst = createData(dst_file, b"dst", 'pointData')
 
 # compute the interpolation weights
 regridId = c_int()
