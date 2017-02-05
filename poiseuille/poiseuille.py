@@ -28,17 +28,51 @@ class Poiseuille:
         # nodal coordinates, domain is [0, 1] x [0, 1]
         self.x = numpy.array([0.0 + self.dx*i for i in range(nx1)])
         self.y = numpy.array([0.0 + self.dy*j for j in range(ny1)])
-        self.flows = numpy.zeros( (nx1, ny1,), numpy.float64 )
+        self.yy = numpy.zeros( (nx1, ny1,), numpy.float64 )
+        self.xx = numpy.zeros( (nx1, ny1,), numpy.float64 )
+        self.flows = numpy.zeros( (nx1 - 1, ny1 - 1,), numpy.float64 )
 
         for i in range(nx1):
             for j in range(ny1):
+                self.yy[i, j] = self.y[j]
+                self.xx[i, j] = self.x[i]
+
+        for i in range(nx1 - 1):
+            for j in range(ny1 - 1):
                 self.flows[i, j] = self.computeFlowInCell(i, j)
 
     def save(self, filename):
         """
         Save flow in netcdf file
         """
-        pass
+        import iris
+        cube = iris.cube.Cube(self.flows, var_name='flows', standard_name='stratiform_precipitation_amount', units='1')
+        yBounds, yMid = self.computeBounds(self.yy)
+        xBounds, xMid = self.computeBounds(self.xx)
+        yCoords = iris.coords.AuxCoord(yMid, var_name='yy', standard_name='latitude', units='1', bounds=xBounds)
+        xCoords = iris.coords.AuxCoord(xMid, var_name='xx', standard_name='longitude', units='1', bounds=yBounds)
+        cube.add_aux_coord(yCoords, data_dims=(0, 1))
+        cube.add_aux_coord(xCoords, data_dims=(0, 1))
+        iris.save(cube, filename)
+
+    def computeBounds(self, array2d):
+        """
+        From the point coordinates, compute the bounds and mid point values
+        @param array2d coordinate as a 2d array
+        @return bounds, mid points
+        """
+        # number of cells
+        nx, ny = array2d.shape[0] - 1, array2d.shape[1] - 1
+        coordBounds = numpy.zeros((nx, ny, 4), numpy.float64)
+        coordMid = numpy.zeros((nx, ny), numpy.float64)
+        for i in range(nx):
+            for j in range(ny):
+                coordBounds[i, j, 0] = array2d[i  , j  ]
+                coordBounds[i, j, 1] = array2d[i+1, j  ]
+                coordBounds[i, j, 2] = array2d[i+1, j+1]
+                coordBounds[i, j, 3] = array2d[i  , j+1]
+                coordMid[i, j] = 0.25*coordBounds[i, j, :].sum()
+        return coordBounds, coordMid
 
     def computeTotalFlow(self):
         """
