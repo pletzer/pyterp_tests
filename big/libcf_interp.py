@@ -175,7 +175,7 @@ ninvalid = dstNtot - nvalid.value
 print('\t     # invalid points: {} ({:.3f}%)'.format(ninvalid,
                                                100*ninvalid/float(dstNtot)))
 
-printInvalidDataPoints(dst['lats'], dst['lons'], dst['dataArray'], fillValue=-2.0)
+#printInvalidDataPoints(dst['lats'], dst['lons'], dst['dataArray'], fillValue=-2.0)
 
 
 print('interpolation error: {:.3g}'.format(error))
