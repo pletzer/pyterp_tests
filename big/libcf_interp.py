@@ -43,11 +43,7 @@ ndims = 2
 def createData(filename, prefix, fieldname):
     # use iris to read in the data
     # then pass the array to create libcf objects
-    cubes = iris.load(filename)
-    cube = None
-    for cb in cubes:
-        if cb.var_name == fieldname:
-            cube = cb
+    cube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == fieldname))[0]
     coords = cube.coords()
     lats = coords[0].points
     lons = coords[1].points
@@ -175,7 +171,7 @@ ninvalid = dstNtot - nvalid.value
 print('\t     # invalid points: {} ({:.3f}%)'.format(ninvalid,
                                                100*ninvalid/float(dstNtot)))
 
-printInvalidDataPoints(dst['lats'], dst['lons'], dst['dataArray'], fillValue=-2.0)
+#printInvalidDataPoints(dst['lats'], dst['lons'], dst['dataArray'], fillValue=-2.0)
 
 
 print('interpolation error: {:.3g}'.format(error))

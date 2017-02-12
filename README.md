@@ -63,3 +63,17 @@ Target grid: 641 x 1281
 | sigrid        |               |              |             |
 | ESMF/ESMPy    |               |              |             |
 
+### ORCA grid 
+
+Source grid: 3606 x 4322
+
+Target grid: 720 x 1440
+
+
+#### Bilinear (nodal field)
+
+|               |  weight sec   | eval sec     |
+| ------------- |---------------|--------------|
+| libcf/pycf    |  537          |  0.025       |
+| ESMF/ESMPy    |  229          |  0.024       |
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Compute the Poiseuille flow inside a pipe of radius 1
+Compute the Poiseuille flow inside a quater of a pipe of radius 1
 as a 2-form (face field)
 The grid is Cartesian
 """
@@ -24,36 +24,50 @@ class Poiseuille:
         # radius of pipe is one
         self.dx = 1.0/float(nx1 - 1)
         self.dy = 1.0/float(ny1 - 1)
+        areaElement = self.dx * self.dy
 
         # nodal coordinates, domain is [0, 1] x [0, 1]
         self.x = numpy.array([0.0 + self.dx*i for i in range(nx1)])
         self.y = numpy.array([0.0 + self.dy*j for j in range(ny1)])
         self.yy = numpy.zeros( (nx1, ny1,), numpy.float64 )
         self.xx = numpy.zeros( (nx1, ny1,), numpy.float64 )
-        self.flows = numpy.zeros( (nx1 - 1, ny1 - 1,), numpy.float64 )
+        self.field = numpy.zeros( (nx1, ny1,), numpy.float64 )
+        self.flux = numpy.zeros( (nx1 - 1, ny1 - 1,), numpy.float64 )
 
         for i in range(nx1):
             for j in range(ny1):
                 self.yy[i, j] = self.y[j]
                 self.xx[i, j] = self.x[i]
+                self.field[i, j] = 1.0 - self.x[i]**2 - self.y[j]**2
 
         for i in range(nx1 - 1):
             for j in range(ny1 - 1):
-                self.flows[i, j] = self.computeFlowInCell(i, j)
+                # most conservative interpolation schemes want 
+                # fluxes
+                self.flux[i, j] = self.computeFlowInCell(i, j) / areaElement
 
     def save(self, filename):
         """
         Save flow in netcdf file
         """
         import iris
-        cube = iris.cube.Cube(self.flows, var_name='flows', standard_name='stratiform_precipitation_amount', units='1')
+
         yBounds, yMid = self.computeBounds(self.yy)
         xBounds, xMid = self.computeBounds(self.xx)
-        yCoords = iris.coords.AuxCoord(yMid, var_name='yy', standard_name='latitude', units='1', bounds=xBounds)
-        xCoords = iris.coords.AuxCoord(xMid, var_name='xx', standard_name='longitude', units='1', bounds=yBounds)
-        cube.add_aux_coord(yCoords, data_dims=(0, 1))
-        cube.add_aux_coord(xCoords, data_dims=(0, 1))
-        iris.save(cube, filename)
+        yCoordMid = iris.coords.AuxCoord(yMid, var_name='yMid', standard_name='latitude', units='1', bounds=xBounds)
+        xCoordMid = iris.coords.AuxCoord(xMid, var_name='xMid', standard_name='longitude', units='1', bounds=yBounds)
+        yCoord = iris.coords.AuxCoord(self.yy, var_name='yy', standard_name='latitude', units='1')
+        xCoord = iris.coords.AuxCoord(self.xx, var_name='xx', standard_name='longitude', units='1')
+
+        cubeCell = iris.cube.Cube(self.flux, var_name='flux', standard_name='stratiform_precipitation_flux', units='kg/m^2')
+        cubeCell.add_aux_coord(yCoordMid, data_dims=(0, 1))
+        cubeCell.add_aux_coord(xCoordMid, data_dims=(0, 1))
+
+        cubePoint = iris.cube.Cube(self.field, var_name='pointData', standard_name='stratiform_precipitation_flux', units='kg/m^2')
+        cubePoint.add_aux_coord(yCoord, data_dims=(0, 1))
+        cubePoint.add_aux_coord(xCoord, data_dims=(0, 1))
+
+        iris.save([cubeCell, cubePoint], filename)
 
     def computeBounds(self, array2d):
         """
@@ -78,7 +92,7 @@ class Poiseuille:
         """
         Compute total flow in pipe
         """
-        return numpy.sum(self.flows[:,:].flat)
+        return numpy.sum(self.flux[:,:].flat) * self.dx * self.dy
 
     def computeFlowInCell(self, i, j):
         """
@@ -254,12 +268,21 @@ class Poiseuille:
         return res
 
 ################################################################################
-def test1():
-    p = Poiseuille(5, 6,)
-    totFlow = p.computeTotalFlow()
+def main():
+
     exactTotalFlow = 2*pi*0.25 / 4. 
-    print 'totFlow = ', totFlow, ' exact = ', exactTotalFlow, ' error = ', totFlow - exactTotalFlow
-    p.save('poiseuille.nc')
+
+    # src grid
+    src = Poiseuille(5, 6,)
+    totFlow = src.computeTotalFlow()
+    print 'src totFlow = ', totFlow, ' exact = ', exactTotalFlow, ' error = ', totFlow - exactTotalFlow
+    src.save('src.nc')
+
+    # dst grid
+    dst = Poiseuille(6, 7,)
+    totFlow = src.computeTotalFlow()
+    print 'src totFlow = ', totFlow, ' exact = ', exactTotalFlow, ' error = ', totFlow - exactTotalFlow
+    src.save('dst.nc')
 
 if __name__ == '__main__': 
-    test1()
+    main()
