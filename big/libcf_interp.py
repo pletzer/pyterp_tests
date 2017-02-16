@@ -86,7 +86,7 @@ def createData(filename, prefix, fieldname):
     array = numpy.ctypeslib.as_array(dataPtr, shape=cube.data.shape)
 
 
-    return {'gridId': gridId, 'dataId': dataId, 'dataArray': array, 'lats': lats, 'lons': lons}
+    return {'gridId': gridId, 'dataId': dataId, 'dataArray': array, 'lats': lats, 'lons': lons, 'cube': cube}
 
 
 def destroyData(dataId):
@@ -173,7 +173,6 @@ print('\t     # invalid points: {} ({:.3f}%)'.format(ninvalid,
 
 #printInvalidDataPoints(dst['lats'], dst['lons'], dst['dataArray'], fillValue=-2.0)
 
-
 print('interpolation error: {:.3g}'.format(error))
 print('time stats:')
 totTime = 0.0
@@ -184,6 +183,10 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 if args.plot:
     plotData(dst['lats'], dst['lons'], dst['dataArray'])
+
+# save to file
+dst['cube'].data = dst['dataArray']
+iris.save([dst['cube']], 'libcfDst.nc')
 
 # clean up
 destroyData(src['dataId'])
