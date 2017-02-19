@@ -7,6 +7,8 @@ import argparse
 from functools import reduce
 import time
 
+LAT_INDEX, LON_INDEX = 1, 0
+
 # turn on logging
 esmpy = ESMF.Manager(debug=True)
 
@@ -43,26 +45,25 @@ def createData(filename, prefix):
     
     # create the ESMF grid object
 
-    latIndex, lonIndex = 0, 1
     cellDims = numpy.array([lats.shape[0] - 1, lats.shape[1] - 1])
-    grid = ESMF.Grid(max_index=cellDims) #, num_peri_dims=1, periodic_dim=1)
+    grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG)#, num_peri_dims=1) #, periodic_dim=1)
 
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=latIndex)
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=lonIndex)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
 
-    coordLat = grid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    coordLon = grid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLat = grid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
+    coordLon = grid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
 
     # get the local start/end index sets
-    iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CORNER][latIndex]
-    iEndLat = grid.upper_bounds[ESMF.StaggerLoc.CORNER][latIndex]
-    iBegLon = grid.lower_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
-    iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][lonIndex]
+    iBegLat = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    iEndLat = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    iBegLon = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iEndLon = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
 
     # set the coordinates
-    coordLat[...] = lats[iBegLat:iEndLat, iBegLon:iEndLon]
-    coordLon[...] = lons[iBegLat:iEndLat, iBegLon:iEndLon]
-
+    coordLat[...] = lats[iBegLon:iEndLon, iBegLat:iEndLat]
+    coordLon[...] = lons[iBegLon:iEndLon, iBegLat:iEndLat]
+   
     # create field
     field = ESMF.Field(grid, name="air_temperature", 
                    staggerloc=ESMF.StaggerLoc.CORNER)
@@ -120,9 +121,8 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # plot
 if args.plot:
-    latIndex, lonIndex = 0, 1
-    lats = dstGrid.get_coords(coord_dim=latIndex, staggerloc=ESMF.StaggerLoc.CORNER)
-    lons = dstGrid.get_coords(coord_dim=lonIndex, staggerloc=ESMF.StaggerLoc.CORNER)
+    lats = dstGrid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
+    lons = dstGrid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     from matplotlib import pylab
     pylab.pcolor(lons, lats, dstData.data)
     pylab.show()

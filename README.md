@@ -77,3 +77,16 @@ Target grid: 720 x 1440
 | libcf/pycf    |  537          |  0.025       |
 | ESMF/ESMPy    |  229          |  0.024       |
 
+Source grid: 3606 x 4322
+
+Target grid: 3601 x 7201
+
+#### Bilinear (nodal field)
+
+|               |  weight sec   | eval sec     |
+| ------------- |---------------|--------------|
+| libcf/pycf    |  1.3e+04      |  0. 38       |
+| ESMF/ESMPy    | 1.82e+03      |  0.40        |
+
+
+
