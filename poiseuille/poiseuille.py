@@ -12,6 +12,7 @@ from ctypes import c_int, c_double, c_void_p, CDLL, byref, POINTER
 import operator
 import os
 import sys
+import argparse
 
 class Poiseuille:
 
@@ -269,17 +270,34 @@ class Poiseuille:
 
 ################################################################################
 def main():
+    parser = argparse.ArgumentParser(description='Interpolate using ESMF')
+    parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
+                help='Source data file name')
+    parser.add_argument('--src_nj', type=int, dest='src_nj', default=11, 
+                help='Number of source cells in the y direction')
+    parser.add_argument('--src_ni', type=int, dest='src_ni', default=11, 
+                help='Number of source cells in the x direction')
+    parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
+                    help='Destination data file name')
+    parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=21, 
+                help='Number of destination cells in the y direction')
+    parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=21, 
+                help='Number of destination cells in the x direction')
 
+    args = parser.parse_args()
+
+
+    # quarter of disc
     exactTotalFlow = 2*pi*0.25 / 4. 
 
     # src grid
-    src = Poiseuille(5, 6,)
+    src = Poiseuille(args.src_nj, args.src_ni)
     totFlow = src.computeTotalFlow()
     print 'src totFlow = ', totFlow, ' exact = ', exactTotalFlow, ' error = ', totFlow - exactTotalFlow
     src.save('src.nc')
 
     # dst grid
-    dst = Poiseuille(6, 7,)
+    dst = Poiseuille(args.dst_nj, args.dst_ni)
     totFlow = src.computeTotalFlow()
     print 'src totFlow = ', totFlow, ' exact = ', exactTotalFlow, ' error = ', totFlow - exactTotalFlow
     src.save('dst.nc')
