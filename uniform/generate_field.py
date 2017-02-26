@@ -6,13 +6,13 @@ import sys
 iris.FUTURE.netcdf_no_unlimited = True
 
 parser = argparse.ArgumentParser(description='Generate uniform data in 2d')
-parser.add_argument('--src_nj', type=int, dest='src_nj', default=401, 
+parser.add_argument('--src_nj', type=int, dest='src_nj', default=101, 
                     help='Source latitude axis dimension')
-parser.add_argument('--src_ni', type=int, dest='src_ni', default=801, 
+parser.add_argument('--src_ni', type=int, dest='src_ni', default=201, 
                     help='Source longitude axis dimension')
-parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=1201, 
+parser.add_argument('--dst_nj', type=int, dest='dst_nj', default=201, 
                     help='Destination latitude axis dimension')
-parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=2401, 
+parser.add_argument('--dst_ni', type=int, dest='dst_ni', default=401, 
                     help='Destination longitude axis dimension')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
@@ -45,13 +45,13 @@ dstData = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
 # set the field to some arbitrary expression
 for j in range(args.src_nj):
     for i in range(args.src_ni):
-        srcData[j, i] = (srcLons[i]/360.0) * (srcLats[j] + 90.0)/180.0
-        #srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i]/180.)*numpy.cos(numpy.pi*srcLats[j]/180.)
+        #srcData[j, i] = (srcLons[i]/360.0) * (srcLats[j] + 90.0)/180.0
+        srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i]/180.)*numpy.cos(numpy.pi*srcLats[j]/180.)
 
 for j in range(args.dst_nj):
     for i in range(args.dst_ni):
-        dstData[j, i] = float('nan')
-        #dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i]/180.)*numpy.cos(numpy.pi*dstLats[j]/180.)
+        #dstData[j, i] = float('nan')
+        dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i]/180.)*numpy.cos(numpy.pi*dstLats[j]/180.)
 
 srcLatCoord = iris.coords.DimCoord(srcLats, standard_name='latitude', units='degrees_north')
 srcLonCoord = iris.coords.DimCoord(srcLons, standard_name='longitude', units='degrees_east')
