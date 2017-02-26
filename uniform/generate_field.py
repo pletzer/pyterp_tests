@@ -44,14 +44,14 @@ dstData = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
 
 # set the field to some arbitrary expression
 for j in range(args.src_nj):
-	for i in range(args.src_ni):
-                srcData[j, i] = (srcLons[i]/360.0) * (srcLats[j] + 90.0)/180.0
-		#srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i]/180.)*numpy.cos(numpy.pi*srcLats[j]/180.)
+    for i in range(args.src_ni):
+        srcData[j, i] = (srcLons[i]/360.0) * (srcLats[j] + 90.0)/180.0
+        #srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i]/180.)*numpy.cos(numpy.pi*srcLats[j]/180.)
 
 for j in range(args.dst_nj):
-	for i in range(args.dst_ni):
-                dstData[j, i] = float('nan')
-	        #dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i]/180.)*numpy.cos(numpy.pi*dstLats[j]/180.)
+    for i in range(args.dst_ni):
+        dstData[j, i] = float('nan')
+        #dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i]/180.)*numpy.cos(numpy.pi*dstLats[j]/180.)
 
 srcLatCoord = iris.coords.DimCoord(srcLats, standard_name='latitude', units='degrees_north')
 srcLonCoord = iris.coords.DimCoord(srcLons, standard_name='longitude', units='degrees_east')
