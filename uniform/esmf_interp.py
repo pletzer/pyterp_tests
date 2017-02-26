@@ -36,7 +36,7 @@ ndims = 2
 def createData(filename, prefix):
 	# use iris to read in the data
 	# then pass the array to the ESMF API
-	cube = iris.load_cube(filename, 'air_temperature')
+	cube = cube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'pointData'))[0]
 	coords = cube.coords()
 	lats = coords[0].points
 	lons = coords[1].points
