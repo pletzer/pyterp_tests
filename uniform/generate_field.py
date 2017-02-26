@@ -34,6 +34,11 @@ if args.dst_file is '':
 latMin, latMax = -90.0, +90.0
 lonMin, lonMax = 0.0, 360.0
 
+def createPointData(lons, lats):
+    # some arbitrary expression
+    data = numpy.outer(numpy.sin(2*numpy.pi*lons[i]/180.), numpy.cos(numpy.pi*lats[j]/180.))
+    return data
+
 # generate the axes
 srcLats = numpy.linspace(latMin, latMax, args.src_nj)
 srcLons = numpy.linspace(lonMin, lonMax, args.src_ni)
@@ -42,26 +47,19 @@ dstLons = numpy.linspace(lonMin, lonMax, args.dst_ni)
 srcData = numpy.zeros((args.src_nj, args.src_ni), numpy.float64)
 dstData = numpy.zeros((args.dst_nj, args.dst_ni), numpy.float64)
 
-# set the field to some arbitrary expression
-for j in range(args.src_nj):
-    for i in range(args.src_ni):
-        #srcData[j, i] = (srcLons[i]/360.0) * (srcLats[j] + 90.0)/180.0
-        srcData[j, i] = numpy.sin(2*numpy.pi*srcLons[i]/180.)*numpy.cos(numpy.pi*srcLats[j]/180.)
-
-for j in range(args.dst_nj):
-    for i in range(args.dst_ni):
-        #dstData[j, i] = float('nan')
-        dstData[j, i] = numpy.sin(2*numpy.pi*dstLons[i]/180.)*numpy.cos(numpy.pi*dstLats[j]/180.)
+# set the field
+srcPointData = createPointData(srcLons, srcLats)
+dstPointData = createPointData(dstLons, dstLats)
 
 srcLatCoord = iris.coords.DimCoord(srcLats, standard_name='latitude', units='degrees_north')
 srcLonCoord = iris.coords.DimCoord(srcLons, standard_name='longitude', units='degrees_east')
-srcCube = iris.cube.Cube(srcData, standard_name='air_temperature', cell_methods=None)
+srcCube = iris.cube.Cube(srcData, var_name='pointData', standard_name='air_temperature', cell_methods=None)
 srcCube.add_dim_coord(srcLatCoord, data_dim=0)
 srcCube.add_dim_coord(srcLonCoord, data_dim=1)
 
 dstLatCoord = iris.coords.DimCoord(dstLats, standard_name='latitude', units='degrees_north')
 dstLonCoord = iris.coords.DimCoord(dstLons, standard_name='longitude', units='degrees_east')
-dstCube = iris.cube.Cube(dstData, standard_name='air_temperature', cell_methods=None)
+dstCube = iris.cube.Cube(dstData, var_name='pointData', standard_name='air_temperature', cell_methods=None)
 dstCube.add_dim_coord(dstLatCoord, data_dim=0)
 dstCube.add_dim_coord(dstLonCoord, data_dim=1)
 
