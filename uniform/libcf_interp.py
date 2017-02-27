@@ -16,6 +16,7 @@ parser.add_argument('--tolpos', type=float, dest='tolpos', default=1.e-8,
 	                help='Tolerance in target space')
 parser.add_argument('--nitermax', type=int, dest='nitermax', default=100,
 	                help='Max number of iterations')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -61,7 +62,7 @@ def createData(filename, prefix):
 
 	dataId = c_int()
 	read_data = 1
-	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"air_temperature",
+	ier = pycf.nccf.nccf_def_data_from_file(filename, gridId, b"pointData",
                                             read_data, byref(dataId))
 	assert(ier == pycf.NC_NOERR)
 
@@ -102,6 +103,28 @@ def getDataAsArray(dataId):
 	data = numpy.ctypeslib.as_array(dataPtr, shape=(ntot,))
 	# return a copy
 	return data.copy()
+
+def plotData(gridId, dataId):
+    from matplotlib import pylab
+    ntot, dims = inquireDataSizes(dataId)
+    data = getDataAsArray(dataId).reshape(dims)
+    coordIds = (c_int * 2)()
+    ier = pycf.nccf.nccf_inq_grid_coordids(gridId, coordIds)
+    assert(ier == pycf.NC_NOERR)
+    latsPtr = POINTER(c_double)()
+    ier = pycf.nccf.nccf_get_coord_data_pointer(coordIds[0], byref(latsPtr))
+    assert(ier == pycf.NC_NOERR)
+    lonsPtr = POINTER(c_double)()
+    ier = pycf.nccf.nccf_get_coord_data_pointer(coordIds[1], byref(lonsPtr))
+    assert(ier == pycf.NC_NOERR)
+    # create numpy arrays from the pointers
+    lats = numpy.ctypeslib.as_array(latsPtr, shape=tuple(dims))
+    lons = numpy.ctypeslib.as_array(lonsPtr, shape=tuple(dims))
+    # plot
+    print(lats.shape, lons.shape, data.shape)
+    pylab.pcolor(lons, lats, data)
+    pylab.show()
+
 
 timeStats = {
 	'weights': float('nan'),
@@ -158,6 +181,10 @@ for k, v in timeStats.items():
 	print('\t{0:<32} {1:>.3g} sec'.format(k, v))
 	totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
+
+# plot
+if args.plot:
+	plotData(dstGridId, dstDataId)
 
 # clean up
 destroyData(srcDataId)
