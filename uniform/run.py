@@ -31,10 +31,10 @@ src_celldims = [(10, 20),
                 (20, 40),
                 (40, 80),
                 (80, 160),
-                (160, 320),
-                (320, 640),
-                (640, 1280),
-                (1280, 2560),]
+                (160, 320),]
+                #(320, 640),
+                #(640, 1280),
+                #(1280, 2560),]
                 #(2560, 5120),
                 #(5120, 10240)]
 
@@ -156,4 +156,4 @@ pylab.xlabel('num src cells * num dst cells')
 pylab.ylabel('time [sec]')
 pylab.title('regridding (uni -> uni)')
 pylab.savefig('run.png')
-#pylab.show()
+pylab.show()
