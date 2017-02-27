@@ -12,6 +12,7 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -92,8 +93,9 @@ checksum = numpy.sum(dstData, axis=None)
 print('check sum: {:.15g}'.format(checksum))
 
 # plot
-from matplotlib import pylab
-latsCell = 0.25 * (dstLatsCoords[0:-1, 0:-1] + dstLatsCoords[1:, 0:-1] + dstLatsCoords[1:, 1:] + dstLatsCoords[0:-1, 1:])
-lonsCell = 0.25 * (dstLonsCoords[0:-1, 0:-1] + dstLonsCoords[1:, 0:-1] + dstLonsCoords[1:, 1:] + dstLonsCoords[0:-1, 1:])
-pylab.pcolor(lonsCell, latsCell, dstData)
-pylab.show()
+if args.plot:
+    from matplotlib import pylab
+    latsCell = 0.25 * (dstLatsCoords[0:-1, 0:-1] + dstLatsCoords[1:, 0:-1] + dstLatsCoords[1:, 1:] + dstLatsCoords[0:-1, 1:])
+    lonsCell = 0.25 * (dstLonsCoords[0:-1, 0:-1] + dstLonsCoords[1:, 0:-1] + dstLonsCoords[1:, 1:] + dstLonsCoords[0:-1, 1:])
+    pylab.pcolor(lonsCell, latsCell, dstData)
+    pylab.show()

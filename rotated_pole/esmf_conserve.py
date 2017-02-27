@@ -111,7 +111,6 @@ timeStats['weights'] = time.time() - tic
 # interpolate
 tic = time.time()
 regrid(srcData, dstData)
-print(dstData.data)
 
 timeStats['evaluation'] = time.time() - tic
 
