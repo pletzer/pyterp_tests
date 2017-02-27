@@ -105,7 +105,7 @@ timeStats['evaluation'] = time.time() - tic
 srcNtot = len(srcData.data.flat)
 dstNtot = len(dstData.data.flat)
 error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
-print('emsf interpolation:')
+print('emsf conservative interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
 print('interpolation error: {:.3g}'.format(error))
@@ -115,6 +115,10 @@ for k, v in timeStats.items():
     print('\t{0:<32} {1:>.3g} sec'.format(k, v))
     totTime += v
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
+
+# check sum
+checksum = numpy.sum(dstData.data, axis=None)
+print('check sum: {:.15g}'.format(checksum))
 
 # plot
 if args.plot:

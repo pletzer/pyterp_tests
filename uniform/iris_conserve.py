@@ -31,8 +31,8 @@ ndims = 2
 def createData(filename, prefix):
 	# use iris to read in the data
 	# then pass the array to the ESMF API
-	pointCube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'pointData'))[0]
-	return pointCube
+	cellCube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'cellData'))[0]
+	return cellCube
 
 timeStats = {
 	'interp': float('nan'),
@@ -45,7 +45,7 @@ dstCube = createData(dst_file, "dst")
 dstDataRef = dstCube.data.copy()
 
 # compute the interpolation weights
-scheme = iris.analysis.Linear()
+scheme = iris.analysis.AreaWeighted()
 tic = time.time()
 interpCube = srcCube.regrid(dstCube, scheme=scheme)
 timeStats['interp'] = time.time() - tic
@@ -56,7 +56,7 @@ dstNtot = len(dstCube.data.flat)
 srcNodeDims = srcCube.data.shape
 dstNodeDims = dstCube.data.shape
 error =  numpy.sum(abs(interpCube.data - dstDataRef)) / float(dstNtot)
-print('iris linear interpolation:')
+print('iris condervative interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
 print('interpolation error: {:.3g}'.format(error))
