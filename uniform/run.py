@@ -99,7 +99,7 @@ for srcDims in src_celldims:
 	# run sigrid
 	err = open('log.err', 'w')
 	out = open('log.txt', 'w')
-	call(['python', 'sigird_conserve.py'], stdout=out, stderr=err)
+	call(['python', 'sigrid_conserve.py'], stdout=out, stderr=err)
 	out.close()
 	sigrid_conserve_eval.append(getEvaluationTime('log.txt'))
 	sigrid_conserve_weights.append(getWeightsTime('log.txt'))
@@ -137,7 +137,7 @@ f = open('run_node_interp-{}.csv'.format(ta), 'w')
 f.write(\
 'src_num_cells*dst_num_cells,esmf_interp_eval,esmf_interp_weights,libcf_interp_eval,libcf_interp_weights,iris_interp,emsf_conserve_eval,esmf_conserve_weights,sigrid_conserve_eval,sigrid_conserve_weights,iris_conserve\n')
 for i in range(len(ns)):
-	f.write('{},{},{},{},{}\n'.format(ns[i], esmf_interp_eval[i], esmf_interp_weights[i], libcf_interp_eval[i], libcf_interp_weights[i], iris_interp[i], iris_interp[i],\
+	f.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(ns[i], esmf_interp_eval[i], esmf_interp_weights[i], libcf_interp_eval[i], libcf_interp_weights[i], iris_interp[i], iris_interp[i],\
                                                  esmf_conserve_eval[i], esmf_conserve_weights[i], sigrid_conserve_eval[i], sigrid_conserve_weights[i], iris_conserve[i]))
 f.close()
 
@@ -149,8 +149,10 @@ pylab.loglog(ns, iris_interp, 'g--')
 pylab.loglog(ns, numpy.array(esmf_conserve_eval) + numpy.array(esmf_conserve_weights), 'r-')
 pylab.loglog(ns, numpy.array(sigrid_conserve_eval) + numpy.array(sigrid_conserve_weights), 'c-')
 pylab.loglog(ns, iris_conserve, 'g-')
+legs = ['esmf lin', 'libcf lin', 'iris lin', 'esmf con', 'sigrid con', 'iris con']
+pylab.legend(legs, loc=2)
 
 pylab.xlabel('num src cells * num dst cells')
 pylab.ylabel('time [sec]')
-pylab.title('regridding')
+pylab.title('regridding (uni -> uni)')
 pylab.show()
