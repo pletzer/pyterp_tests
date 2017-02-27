@@ -10,6 +10,7 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
+parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
 
 args = parser.parse_args()
 
@@ -30,8 +31,8 @@ ndims = 2
 def createData(filename, prefix):
 	# use iris to read in the data
 	# then pass the array to the ESMF API
-	cube = iris.load_cube(filename, 'air_temperature')
-	return cube
+	pointCube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'pointData'))[0]
+	return pointCube
 
 timeStats = {
 	'interp': float('nan'),
@@ -63,6 +64,14 @@ print('time stats:')
 for k, v in timeStats.items():
 	print('\t{0:<32} {1:>.3g} sec'.format(k, v))
 print()
+
+if args.plot:
+    from matplotlib import pylab
+    lats = dstCube.coords()[0].points
+    lons = dstCube.coords()[1].points
+    data = dstCube.data
+    pylab.pcolor(lons, lats, data)
+    pylab.show()
 
 # clean up
 # nothing to do
