@@ -34,7 +34,7 @@ src_celldims = [(10, 20),
 
 ns = []
 libcf_interp_eval = []
-libcf_interp_interp_weights = []
+libcf_interp_weights = []
 esmf_interp_eval = []
 esmf_interp_weights = []
 esmf_conserve_eval = []
@@ -96,19 +96,20 @@ ta = re.sub(' ', '_', time.asctime())
 f = open('run_node_interp-{}.csv'.format(ta), 'w')
 f.write('src_num_cells*dst_num_cells,esmf_interp_eval,esmf_interp_weights,esmf_conserve_eval,esmf_conserve_weights,libcf_interp_eval,libcf_interp_weights\n')
 for i in range(len(ns)):
-	f.write('{},{},{},{},{}\n'.format(ns[i], esmf_interp_eval[i], esmf_interp_interp_interp_weights[i], libcf_interp_interp_eval[i], libcf_interp_weights[i]))
+	f.write('{},{},{},{},{},{},{}\n'.format(ns[i], esmf_interp_eval[i], esmf_interp_weights[i], libcf_interp_eval[i], libcf_interp_weights[i], esmf_conserve_eval[i], esmf_conserve_weights[i]))
 f.close()
 
 from matplotlib import pylab
 import matplotlib
-pylab.loglog(ns, esmf_interp_interp_interp_interp_eval, 'ro', markersize=8)
-pylab.loglog(ns, esmf_interp_interp_interp_weights, 'rs', markersize=8)
-pylab.loglog(ns, libcf_interp_interp_eval, 'bo', markersize=8) 
-pylab.loglog(ns, libcf_interp_weights, 'bs', markersize=8)
-pylab.legend(['esmf lin eval', 'esmf lin wgts', 'libcf lin eval', 'libcf lin wgts'], loc=2)
-pylab.plot(ns, libcf_interp_interp_interp_interp_eval, 'b--', ns, libcf_interp_interp_interp_weights, 'b--', \
-	       ns, esmf_interp_interp_eval, 'r--', ns, esmf_interp_weights, 'r--')
+pylab.loglog(ns, esmf_interp_eval, 'r-')
+pylab.loglog(ns, esmf_interp_weights, 'r--')
+pylab.loglog(ns, libcf_interp_eval, 'b-')
+pylab.loglog(ns, libcf_interp_weights, 'b--')
+pylab.loglog(ns, esmf_conserve_eval, 'm-')
+pylab.loglog(ns, esmf_conserve_weights, 'm--')
+pylab.legend(['esmf lin eval', 'esmf lin wgts', 'libcf lin eval', 'libcf lin wgts', 'emsf con eval', 'esmf con wgts'], loc=2)
 pylab.xlabel('num src cells * num dst cells')
 pylab.ylabel('time [sec]')
-pylab.title('bilinear interpolation')
+pylab.title('regridding rotated pole to rectilinear')
+pylab.savefig('run.png')
 pylab.show()
