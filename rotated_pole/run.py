@@ -1,5 +1,12 @@
 from subprocess import call
 import re
+import argparse
+
+parser = argparse.ArgumentParser(description='Exercise regridding')
+parser.add_argument('--nprocs', type=int, dest='nprocs', default=1,
+                    help='Number of procs (for programs supporting MPI execution)')
+
+args = parser.parse_args()
 
 def getEvaluationTime(filename):
 	m = re.search(r'evaluation\s+([\d\.e\-\+]+)', open(filename, 'r').read())
@@ -22,12 +29,12 @@ def getNumberOfInvalidPoints(filename):
 
 src_celldims = [(10, 20),
                 (20, 40),
-                (40, 80),
-                (80, 160),
-                (160, 320),
-                (320, 640),
-                (640, 1280),
-                (1280, 2560),]
+                (40, 80),]
+                #(80, 160),
+                #(160, 320),
+                #(320, 640),
+                #(640, 1280),
+                #(1280, 2560),]
                 #(2560, 5120),
                 #(5120, 10240)]
 
@@ -39,6 +46,10 @@ esmf_interp_eval = []
 esmf_interp_weights = []
 esmf_conserve_eval = []
 esmf_conserve_weights = []
+esmf_interp_eval_par = []
+esmf_interp_weights_par = []
+esmf_conserve_eval_par = []
+esmf_conserve_weights_par = []
 
 for srcDims in src_celldims:
 	# generate the grids
@@ -55,7 +66,7 @@ for srcDims in src_celldims:
 	ns.append(srcN * dstN)
 	print('number of src * dst cells is {}'.format(srcN * dstN))
 
-	# run esmf bilinear
+	# run esmf bilinear (serial)
 	err = open('log.err', 'w')
 	out = open('log.txt', 'w')
 	call(['python', 'esmf_interp.py'], stdout=out, stderr=err)
@@ -63,7 +74,24 @@ for srcDims in src_celldims:
 	esmf_interp_eval.append(getEvaluationTime('log.txt'))
 	esmf_interp_weights.append(getWeightsTime('log.txt'))
 
-	# run esmf conserve
+	if args.nprocs > 1:
+		# run esmf conserve (parallel)
+		err = open('log.err', 'w')
+		out = open('log.txt', 'w')
+		call(['mpiexec', '-n', str(args.nprocs), 'python', 'esmf_conserve.py'], stdout=out, stderr=err)
+		out.close()
+		esmf_conserve_eval_par.append(getEvaluationTime('log.txt'))
+		esmf_conserve_weights_par.append(getWeightsTime('log.txt'))
+
+		# run esmf bilinear (parallel)
+		err = open('log.err', 'w')
+		out = open('log.txt', 'w')
+		call(['mpiexec', '-n', str(args.nprocs), 'python', 'esmf_interp.py'], stdout=out, stderr=err)
+		out.close()
+		esmf_interp_eval_par.append(getEvaluationTime('log.txt'))
+		esmf_interp_weights_par.append(getWeightsTime('log.txt'))
+
+	# run esmf conserve (serial)
 	err = open('log.err', 'w')
 	out = open('log.txt', 'w')
 	call(['python', 'esmf_conserve.py'], stdout=out, stderr=err)
@@ -101,15 +129,34 @@ f.close()
 
 from matplotlib import pylab
 import matplotlib
+
+legs = []
+
+legs.append('esmf lin eval')
 pylab.loglog(ns, esmf_interp_eval, 'r-')
+legs.append('esmf lin wgts')
 pylab.loglog(ns, esmf_interp_weights, 'r--')
+legs.append('libcf lin eval')
 pylab.loglog(ns, libcf_interp_eval, 'b-')
+legs.append('libcf lin wgts')
 pylab.loglog(ns, libcf_interp_weights, 'b--')
+legs.append('esmf con eval')
 pylab.loglog(ns, esmf_conserve_eval, 'm-')
+legs.append('esmf con wgts')
 pylab.loglog(ns, esmf_conserve_weights, 'm--')
-pylab.legend(['esmf lin eval', 'esmf lin wgts', 'libcf lin eval', 'libcf lin wgts', 'emsf con eval', 'esmf con wgts'], loc=2)
+if args.nprocs > 1:
+	legs.append('esmf lin eval {}p'.format(args.nprocs))
+	pylab.loglog(ns, esmf_interp_eval_par, 'r-', linewidth=2)
+	legs.append('esmf lin wgts {}p'.format(args.nprocs))
+	pylab.loglog(ns, esmf_interp_weights_par, 'r--', linewidth=2)
+	legs.append('esmf con eval {}p'.format(args.nprocs))
+	pylab.loglog(ns, esmf_conserve_eval_par, 'm-', linewidth=2)
+	legs.append('esmf con wgts {}p'.format(args.nprocs))
+	pylab.loglog(ns, esmf_conserve_weights_par, 'm--', linewidth=2)
+
+pylab.legend(legs, loc=2)
 pylab.xlabel('num src cells * num dst cells')
 pylab.ylabel('time [sec]')
 pylab.title('regridding rotated pole to rectilinear')
 pylab.savefig('run.png')
-pylab.show()
+#pylab.show()
