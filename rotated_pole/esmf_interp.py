@@ -114,20 +114,34 @@ timeStats['evaluation'] = time.time() - tic
 # compute error
 srcNtot = len(srcData.data.flat)
 dstNtot = len(dstData.data.flat)
-error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
-print('emsf interpolation:')
-print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
-print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
-print('interpolation error: {:.3g}'.format(error))
-totTime = 0.0
-print('time stats:')
+localSumError = numpy.sum(abs(dstData.data - dstDataRef))
+globalSumError = numpy.sum(MPI.COMM_WORLD.gather(localSumError, root=0))
+globalSrcNtot = numpy.sum(MPI.COMM_WORLD.gather(srcNtot, root=0))
+globalDstNtot = numpy.sum(MPI.COMM_WORLD.gather(dstNtot, root=0))
+
+globalTimeStats = {}
 for k, v in timeStats.items():
-    print('\t{0:<32} {1:>.3g} sec'.format(k, v))
-    totTime += v
-print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
+    # max value
+    ts = MPI.COMM_WORLD.gather(v, root=0)
+    if ts is not None:
+        globalTimeStats[k] = max(ts)
+
+if pe == 0:
+    error = globalSumError / float(globalDstNtot)
+    print('emsf interpolation:')
+    print('\tsrc: ntot: {}'.format(globalSrcNtot))
+    print('\tdst: ntot: {}'.format(globalDstNtot))
+    print('interpolation error: {:.3g}'.format(error))
+
+    totTime = 0.0
+    print('time stats:')
+    for k, v in globalTimeStats.items():
+        print('\t{0:<32} {1:>.3g} sec'.format(k, v))
+        totTime += v
+    print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 # plot
-if args.plot:
+if args.plot and nprocs == 1:
     lats = dstGrid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     lons = dstGrid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     from matplotlib import pylab
