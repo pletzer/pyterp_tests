@@ -3,19 +3,19 @@ import re
 import numpy
 
 def getEvaluationTime(filename):
-	m = re.search(r'evaluation\s+([\d\.e\-]+)', open(filename, 'r').read())
+	m = re.search(r'evaluation\s+([\d\.e\-\+]+)', open(filename, 'r').read())
 	if m:
 		return float(m.group(1))
 	return None
 
 def getWeightsTime(filename):
-	m = re.search(r'weights\s+([\d\.e\-]+)', open(filename, 'r').read())
+	m = re.search(r'weights\s+([\d\.e\-\+]+)', open(filename, 'r').read())
 	if m:
 		return float(m.group(1))
 	return None
 
 def getInterpTime(filename):
-        m = re.search(r'interp\s+([\d\.e\-]+)', open(filename, 'r').read())
+        m = re.search(r'interp\s+([\d\.e\-\+]+)', open(filename, 'r').read())
 	if m:
 		return float(m.group(1))
 	return None
@@ -31,10 +31,10 @@ src_celldims = [(10, 20),
                 (20, 40),
                 (40, 80),
                 (80, 160),
-                (160, 320),]
-                #(320, 640),
-                #(640, 1280),
-                #(1280, 2560),]
+                (160, 320),
+                (320, 640),
+                (640, 1280),
+                (1280, 2560),]
                 #(2560, 5120),
                 #(5120, 10240)]
 
@@ -96,13 +96,18 @@ for srcDims in src_celldims:
 	libcf_interp_eval.append(getEvaluationTime('log.txt'))
 	libcf_interp_weights.append(getWeightsTime('log.txt'))
 
-	# run sigrid
-	err = open('log.err', 'w')
-	out = open('log.txt', 'w')
-	call(['python', 'sigrid_conserve.py'], stdout=out, stderr=err)
-	out.close()
-	sigrid_conserve_eval.append(getEvaluationTime('log.txt'))
-	sigrid_conserve_weights.append(getWeightsTime('log.txt'))
+	# run sigrid	
+	if srcDims[0] < 160:
+		err = open('log.err', 'w')
+		out = open('log.txt', 'w')
+		call(['python', 'sigrid_conserve.py'], stdout=out, stderr=err)
+		out.close()
+		sigrid_conserve_eval.append(getEvaluationTime('log.txt'))
+		sigrid_conserve_weights.append(getWeightsTime('log.txt'))
+	else:
+		# too slow to run
+		sigrid_conserve_eval.append(None)
+		sigrid_conserve_weights.append(None)
 
 	# run iris linear
 	err = open('log.err', 'w')
@@ -118,17 +123,17 @@ for srcDims in src_celldims:
 	out.close()
 	iris_conserve.append(getInterpTime('log.txt'))
 
-print('ns = {}'.format(ns))
-print('esmf_interp_eval = {}'.format(esmf_interp_eval))
-print('emsf_interp_weights = {}'.format(esmf_interp_weights))
-print('libcf_interp_eval = {}'.format(libcf_interp_eval))
-print('libcf_interp_weights = {}'.format(libcf_interp_weights))
-print('iris_interp = {}'.format(iris_interp))
-print('emsf_conserve_eval = {}'.format(esmf_conserve_eval))
-print('esmf_conserve_weights = {}'.format(esmf_conserve_weights))
-print('sigrid_conserve_eval = {}'.format(sigrid_conserve_eval))
-print('sigrid_conserve_weights = {}'.format(sigrid_conserve_weights))
-print('iris_conserve = {}'.format(iris_conserve))
+	print('ns = {}'.format(ns))
+	print('esmf_interp_eval = {}'.format(esmf_interp_eval))
+	print('emsf_interp_weights = {}'.format(esmf_interp_weights))
+	print('libcf_interp_eval = {}'.format(libcf_interp_eval))
+	print('libcf_interp_weights = {}'.format(libcf_interp_weights))
+	print('iris_interp = {}'.format(iris_interp))
+	print('emsf_conserve_eval = {}'.format(esmf_conserve_eval))
+	print('esmf_conserve_weights = {}'.format(esmf_conserve_weights))
+	print('sigrid_conserve_eval = {}'.format(sigrid_conserve_eval))
+	print('sigrid_conserve_weights = {}'.format(sigrid_conserve_weights))
+	print('iris_conserve = {}'.format(iris_conserve))
 
 # write to file
 import re, time
@@ -147,7 +152,13 @@ pylab.loglog(ns, numpy.array(esmf_interp_eval) + numpy.array(esmf_interp_weights
 pylab.loglog(ns, numpy.array(libcf_interp_eval) + numpy.array(libcf_interp_weights), 'b--')
 pylab.loglog(ns, iris_interp, 'g--')
 pylab.loglog(ns, numpy.array(esmf_conserve_eval) + numpy.array(esmf_conserve_weights), 'r-')
-pylab.loglog(ns, numpy.array(sigrid_conserve_eval) + numpy.array(sigrid_conserve_weights), 'c-')
+sigrid_conserve = []
+for i in range(len(ns)):
+	if sigrid_conserve_eval[i] is not None:
+		sigrid_conserve.append(sigrid_conserve_eval[i] + sigrid_conserve_weights[i])
+	else:
+		sigrid_conserve.append(None)
+pylab.loglog(ns, sigrid_conserve, 'c-')
 pylab.loglog(ns, iris_conserve, 'g-')
 legs = ['esmf lin', 'libcf lin', 'iris lin', 'esmf con', 'sigrid con', 'iris con']
 pylab.legend(legs, loc=2)
