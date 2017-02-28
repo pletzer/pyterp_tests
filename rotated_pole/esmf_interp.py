@@ -6,6 +6,13 @@ import sys
 import argparse
 from functools import reduce
 import time
+from mpi4py import MPI
+
+# rank of this processor
+pe = MPI.COMM_WORLD.Get_rank()
+
+# number of processes
+nprocs = MPI.COMM_WORLD.Get_size()
 
 LAT_INDEX, LON_INDEX = 1, 0
 
@@ -38,7 +45,7 @@ ndims = 2
 def createData(filename, prefix):
     # use iris to read in the data
     # then pass the array to the ESMF API
-    cube = cube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'pointData'))[0]
+    cube = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'pointData'))[0]
     coords = cube.coords()
     lats = coords[0].points
     lons = coords[1].points
@@ -67,7 +74,7 @@ def createData(filename, prefix):
     # create field
     field = ESMF.Field(grid, name="air_temperature", 
                    staggerloc=ESMF.StaggerLoc.CORNER)
-    field.data[...] = cube.data[:]
+    field.data[...] = cube.data[iBegLon:iEndLon, iBegLat:iEndLat]
 
     nodeDims = (iEndLat - iBegLat, iEndLon - iBegLon)
 

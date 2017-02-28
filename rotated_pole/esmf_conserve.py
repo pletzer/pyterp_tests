@@ -6,9 +6,16 @@ import sys
 import argparse
 from functools import reduce
 import time
+from mpi4py import MPI
 
 # turn on logging
 esmpy = ESMF.Manager(debug=True)
+
+# rank of this processor
+pe = MPI.COMM_WORLD.Get_rank()
+
+# number of processes
+nprocs = MPI.COMM_WORLD.Get_size()
 
 LAT_INDEX, LON_INDEX = 1, 0
 
@@ -39,13 +46,9 @@ def createData(filename, prefix):
     # use iris to read in the data
     # then pass the array to the ESMF API
     cubes = iris.load(filename)
-    cubePoint, cubeCell = None, None
-    # find the point and cell cubes
-    for cb in cubes:
-        if cb.var_name == 'pointData':
-            cubePoint = cb
-        if cb.var_name == 'cellData':
-            cubeCell = cb
+    cubePoint = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'pointData'))[0]
+    cubeCell = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == 'cellData'))[0]
+
     coordsPoint = cubePoint.coords()
     latsPoint = coordsPoint[0].points
     lonsPoint = coordsPoint[1].points
@@ -73,7 +76,7 @@ def createData(filename, prefix):
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
-    field.data[...] = cubeCell.data[:]
+    field.data[...] = cubeCell.data[iBeg0:iEnd0, iBeg1:iEnd1]
 
     return grid, field, nodeDims
 
@@ -134,7 +137,7 @@ checksum = numpy.sum(dstData.data, axis=None)
 print('check sum: {:.15g}'.format(checksum))
 
 # plot
-if args.plot:
+if args.plot and nprocs == 1:
     xPoint = dstGrid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     yPoint = dstGrid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     xxCell = 0.25 * (xPoint[0:-1, 0:-1] + xPoint[1:, 0:-1] + xPoint[1:, 1:] + xPoint[0:-1, 1:])
