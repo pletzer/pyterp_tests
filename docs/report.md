@@ -42,14 +42,12 @@ interpolation in n-dimensions while ESMF supports interpolation from and onto un
 
 Simple sinusoidal field on a uniform source grid with invalid data inside a quarter of a disk. Shown are 
 the source field values on nodes and the interpolated fields values on the much finer destination grid.
-Notice that destination points falling inside source cells that have an invalid node are not interpolated. In 
-the case of libcf, on the other hand, the destination points will be interpolated provided they fall within 
-a valid triangle subcell.
+Invalid points are shows as grey cubes. 
 
-ESMF:
+For ESMF, notice that destination points falling inside source cells that have an invalid node are not interpolated. 
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png "ESMF bilinear regridding of masked field")
 
-libcf:
+In the case of libcf, on the other hand, the destination points will be interpolated provided they fall within a valid triangle subcell
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png "libcf bilinear regridding of masked field")
 
 
