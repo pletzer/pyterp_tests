@@ -110,13 +110,17 @@ for srcDims in src_celldims:
 	if numFails != 0:
 		print('*** {} libcf interp failures'.format(numFails))
 
-	print(ns)
-	print(esmf_interp_eval)
-	print(esmf_interp_weights)
-	print(esmf_conserve_eval)
-	print(esmf_conserve_weights)
-	print(libcf_interp_eval)
-	print(libcf_interp_weights)
+	print('ns = {}'.format(ns))
+	print('esmf_interp_eval = {}'.format(esmf_interp_eval))
+	print('esmf_interp_weights = {}'.format(esmf_interp_weights))
+	print('esmf_interp_eval {}p = {}'.format(args.nprocs, esmf_interp_eval_par))
+	print('esmf_interp_weights {}p = {}'.format(args.nprocs, esmf_interp_weights_par))
+	print('esmf_conserve_eval = {}'.format(esmf_conserve_eval))
+	print('esmf_conserve_weights = {}'.format(esmf_conserve_weights))
+	print('esmf_conserve_eval {}p = {}'.format(args.nprocs, esmf_conserve_eval_par))
+	print('esmf_conserve_weights {}p = {}'.format(args.nprocs, esmf_conserve_weights_par))
+	print('libcf_interp_eval = {}'.format(libcf_interp_eval))
+	print('libcf_interp_weights = {}'.format(libcf_interp_weights))
 
 # write to file
 import re, time
