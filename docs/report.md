@@ -40,9 +40,8 @@ interpolation in n-dimensions while ESMF supports interpolation from and onto un
 
 ### Bilinear
 
-#### No masking
+Simple sinusoidal field on a uniform source grid with invalid data inside a quarter of a disk. 
 
-#### Masking
 
 ### Conservative
 
