@@ -18,7 +18,12 @@ The regridding tools we considered are:
  * sigrid
  * ESMF 7.x
 
- Their capabilities are summarized below:
+ The considered interpolation methods are bilinear and conservative. Bilinear is suitable for nodal 
+ data whereas conservative should be applied to cell centred data, for which there is a need to 
+ conserve global quantities sucha as mass, energy, etc. None of these methods are appropriate for 
+ vector fields such as the velocity on a Arakawa C grid for which the components are staggered.
+
+ The capabilities of the regridding tools are summarized below:
 
 |               |  grid type    |   bilinear?   | conservative? |  store weights? |
 |---------------|---------------|--------------|----------------|-----------------|
@@ -27,94 +32,29 @@ The regridding tools we considered are:
 | sigrid        |  structured  |    no         |    yes        |     yes         |
 | ESMF          |  structured  |    yes        |    yes        |     yes         |
 
-Note that some tools have capabilities we have not tested. For instance, libcf supportd multilinear 
-interpolation in n-dimensions and ESMF supports interpolation from and onto unstructured grids in 
+Note that some tools have capabilities we have not tested. For instance, libcf supports linear 
+interpolation in n-dimensions while ESMF supports interpolation from and onto unstructured grids in 
 2D and 3D. 
 
+## Accuracy
 
-## Prequisites
+### Bilinear
 
- * Anaconda python 2.7 with numpy 1.11.1 or later
- * Iris 1.10.0-DEV. Install with `conda install -c scitools iris`
- * ESMF/ESMPy 7.0.0 or later [https://www.earthsystemcog.org/projects/esmpy/]
-     
-Typical build instructions on Linux
+#### No masking
 
-```cd esmf; export ESMF_DIR=$PWD; export ESMF_COMM=mpich2; export ESMF_INSTALL_PREFIX=<path-to-esmf>```
+#### Masking
 
-```make; make install```
+### Conservative
 
-```cd src/addon/ESMPy/; python setup.py build --ESMFMKFILE=<path-to-esmf>/lib/libO/<platform>/esmf.mk install```
-     
- * libcf/pycf 1.6.5 or later. Install with `pip install pycf`
- * sigrid 0.1.0 or later. `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install`
+## Performance
 
-## Results
+### Uniform to uniform grid
 
-Shown are execution times for the computation of the interpolation weights and the times it takes to apply 
-the weights to the fields (eval). 
+### Rotated pole to uniform grid
 
-### Polar grid to uniform grid
+### Tripolar grid to uniform grid
 
-Source grid: 400 x 800
-
-Target grid: 200 x 400
-
-
-#### Conservative (cell centered field)
-
-
-|               |  weight sec   | eval sec     | error       |
-| ------------- |---------------|--------------|-------------|
-| sigrid        |               |              |             |
-| ESMF/ESMPy    |  7.86         |   0.003      | -0.0013     |
-
-
-### Rotated pole grid to uniform grid
-
-Source grid: 1281 x 2560
-
-Target grid: 641 x 1281
-
-
-#### Bilinear (nodal field)
-
-|               |  weight sec   | eval sec     | error       |
-| ------------- |---------------|--------------|-------------|
-| libcf/pycf    |  12.9         |  0.028       |   2.8e-06   |
-| ESMF/ESMPy    |  234          |  0.53        |   9.3e-06   |
-
-#### Conservative (cell centered field)
-
-|               |  weight sec   | eval sec     | error       |
-| ------------- |---------------|--------------|-------------|
-| sigrid        |               |              |             |
-| ESMF/ESMPy    |               |              |             |
-
-### ORCA grid 
-
-Source grid: 3606 x 4322
-
-Target grid: 720 x 1440
-
-
-#### Bilinear (nodal field)
-
-|               |  weight sec   | eval sec     |
-| ------------- |---------------|--------------|
-| libcf/pycf    |  537          |  0.025       |
-| ESMF/ESMPy    |  229          |  0.024       |
-
-Source grid: 3606 x 4322
-
-Target grid: 3601 x 7201
-
-#### Bilinear (nodal field)
-
-|               |  weight sec   | eval sec     |
-| ------------- |---------------|--------------|
-| libcf/pycf    |  1.3e+04      |  0. 38       |
-| ESMF/ESMPy    | 1.82e+03      |  0.40        |
+## Summary and recommendations
 
 
 
