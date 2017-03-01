@@ -47,10 +47,10 @@ the case of libcf, on the other hand, the destination points will be interpolate
 a valid triangle subcell.
 
 ESMF:
-https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png "ESMF bilinear regridding of masked field")
 
 libcf:
-https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png "libcf bilinear regridding of masked field")
 
 
 ### Conservative
