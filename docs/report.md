@@ -47,7 +47,7 @@ Invalid points are shows as grey cubes.
 For ESMF, notice that destination points falling inside source cells that have an invalid node are not interpolated. 
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png "ESMF bilinear regridding of masked field")
 
-In the case of libcf, on the other hand, the destination points will be interpolated provided they fall within a valid triangle subcell
+In the case of libcf on the other hand, destination points will be interpolated if they fall within a valid triangle subcell
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png "libcf bilinear regridding of masked field")
 
 
@@ -57,9 +57,24 @@ In the case of libcf, on the other hand, the destination points will be interpol
 
 ### Uniform to uniform grid
 
+The following shows the execution time required to regrid uniform source and destination grids of various resolution. 
+
+Iris and ESMF require about the same time for conservative interpolatiion, a somewhat surprising result given that ESMF supports 
+generic structured and unstructured grids (iris's conservative regridding is restricted to works uniform source/destination grids).
+
+The fastest bilinear interpolation is obtained with iris. Next, libcf is almost two orders of magnitudes slower. ESMF bilinear is almost another order of magnitudes slower.
+
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/uniform/run.png "comparing the execution times of different regridding methods and packages")
+
+
 ### Rotated pole to uniform grid
 
+The source (green) and destination grids (red) are shown below
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/rotated_pole_grid.png "rotated pole to uniform grid")
+
 ### Tripolar grid to uniform grid
+
+The source is a tripolar grid of fixed resolution 3606 x 4322. The destination grid' resolution is varied. 
 
 ## Summary and recommendations
 
