@@ -72,9 +72,16 @@ The fastest bilinear interpolation is obtained with iris. Next, libcf is almost 
 The source (green) and destination grids (red) are shown below
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/rotated_pole_grid.png "rotated pole to uniform grid")
 
+Execution times are split between computing the interpolatiion weights (wgts) and applying the weights to the source field to evaluate the inteprolation (eval). The evaluation step is typically orders of magnituds faster than the computation of weights,
+indicated the need to reuse the weights whenever possible. Ideally, users should be able to store the weights on disk for 
+reuse. 
+
+Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage seems to mostly disappear at very large resolutions. Conservative interpolation is only a facto 2x slower than ESMF bilinear at very high resolution. 
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/run.png "rotated pole to uniform regridding")
+
 ### Tripolar grid to uniform grid
 
-The source is a tripolar grid of fixed resolution 3606 x 4322. The destination grid' resolution is varied. 
+The source is a tripolar grid of fixed resolution 3606 x 4322. The destination grid's resolution is varied. 
 
 ## Summary and recommendations
 
