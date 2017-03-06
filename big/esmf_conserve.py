@@ -116,7 +116,8 @@ dstData.data[...] = -1
 tic = time.time()
 regrid = ESMF.Regrid(srcfield=srcData, dstfield=dstData,
                      regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
-                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE)
+                     unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE,
+                     ignore_degenerate=True)
 timeStats['weights'] = time.time() - tic
 
 # interpolate
