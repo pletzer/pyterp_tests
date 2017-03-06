@@ -1,6 +1,6 @@
 from __future__ import print_function
 import ESMF
-import iris
+import netCDF4
 import numpy
 import sys
 import argparse
@@ -22,11 +22,8 @@ LAT_INDEX, LON_INDEX = 1, 0
 parser = argparse.ArgumentParser(description='Conservatively interpolate using ESMF')
 parser.add_argument('--src_file', type=str, dest='src_file', default='coords_CF_ORCA12_GO6-2.nc',
                     help='Source data file name')
-parser.add_argument('--src_field_centre', type=str, dest='src_field_centre', 
+parser.add_argument('--src_field', type=str, dest='src_field', 
                     default='ocndepw',
-                    help='Source data field name')
-parser.add_argument('--src_field_node', type=str, dest='src_field_node', 
-                    default='ocndept',
                     help='Source data field name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
@@ -48,19 +45,34 @@ src_file = args.src_file.encode('UTF-8') # python3
 dst_file = args.dst_file.encode('UTF-8') # python3
 ndims = 2
 
-def createData(filename, prefix):
-    # use iris to read in the data
+def createData(filename, fieldname, coord_names):
+    # read the netcdf data
     # then pass the array to the ESMF API
-    cubes = iris.load(filename)
-    cubePoint = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == args.src_field_node))[0]
-    cubeCell = iris.load(filename, iris.Constraint(cube_func = lambda c: c.var_name == args.src_field_centre))[0]
+    nc = netCDF4.Dataset(filename)
 
-    coordsPoint = cubePoint.coords()
-    latsPoint = coordsPoint[0].points
-    lonsPoint = coordsPoint[1].points
+    # read the cell centred field
+    cellData = nc.variables[fieldname][:]
+
+    # read the bound coordinates
+    boundLats = nc.variables[coord_names['lat_bounds']][:]
+    boundLons = nc.variables[coord_names['lon_bounds']][:]
+
+    pointSizes = (boundLats.shape[0] + 1, boundLats.shape[1] + 1)
+
+    # fill in the lat-lon ar the cell corner points
+    lats = numpy.zeros(pointSizes, numpy.float64)
+    lons = numpy.zeros(pointSizes, numpy.float64)
+    lats[:-1, :-1] = boundLats[..., 0]
+    lats[-1, :-1] = boundLats[-1, :, 1]
+    lats[-1, -1]  = boundLats[-1, -1, 2]
+    lats[:-1, -1]  = boundLats[:, -1, 3]
+    lons[:-1, :-1] = boundLons[..., 0]
+    lons[-1, :-1] = boundLons[-1, :, 1]
+    lons[-1, -1]  = boundLons[-1, -1, 2]
+    lons[:-1, -1]  = boundLons[:, -1, 3]
     
     # create the ESMF grid object
-    cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
+    cellDims = numpy.array([lats.shape[0] - 1, lats.shape[1] - 1])
     grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
@@ -74,15 +86,15 @@ def createData(filename, prefix):
     iBeg1 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
     iEnd1 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
     # NEED TO CHECK ORDERING!!!
-    coordLatsPoint[...] = latsPoint[iBeg0:iEnd0, iBeg1:iEnd1]
-    coordLonsPoint[...] = lonsPoint[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLatsPoint[...] = lats[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLonsPoint[...] = lons[iBeg0:iEnd0, iBeg1:iEnd1]
 
     # local sizes
     nodeDims = (iEnd0 - iBeg0, iEnd1 - iBeg1)
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
-    field.data[...] = cubeCell.data[iBeg0:iEnd0, iBeg1:iEnd1]
+    field.data[...] = cellData[iBeg0:iEnd0, iBeg1:iEnd1]
 
     return grid, field, nodeDims
 
@@ -91,8 +103,10 @@ timeStats = {
     'evaluation': float('nan'),
 }
 
-srcGrid, srcData, srcNodeDims = createData(src_file, b"src")
-dstGrid, dstData, dstNodeDims = createData(dst_file, b"dst")
+srcGrid, srcData, srcNodeDims = createData(src_file, args.src_field, {'lat_bounds': 'latw_bounds',
+                                                                     'lon_bounds': 'lonw_bounds',})
+dstGrid, dstData, dstNodeDims = createData(dst_file, 'cellData', {'lat_bounds': 'latMid_bnds',
+                                                                  'lon_bounds': 'lonMid_bnds',})
 
 # save the reference (exact) field data
 dstDataRef = dstData.data.copy()
