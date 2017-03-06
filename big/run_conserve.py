@@ -103,14 +103,17 @@ legs = ['emsf eval', 'esmf wgts',]
 pylab.loglog(ns, esmf_eval, 'ro', markersize=8)
 pylab.loglog(ns, esmf_weights, 'rs', markersize=8)
 if args.nprocs > 1:
-    pylab.loglog(ns, esmf_eval, 'co', markersize=8) 
-    pylab.loglog(ns, libcf_weights, 'cs', markersize=8)
+    pylab.loglog(ns, esmf_eval_par, 'co', markersize=8) 
+    pylab.loglog(ns, esmf_weights_par, 'cs', markersize=8)
     legs += ['esmf eval {}p'.format(args.nprocs), 'esmf wgts {}p'.format(args.nprocs)]
 pylab.legend(legs, loc=4)
 
-pylab.plot(ns, esmf_eval, 'r--', ns, esmf_weights, 'r--')
+pylab.plot(ns, esmf_eval, 'r--')
+pylab.plot(ns, esmf_weights, 'r-')
 if args.nprocs > 1:
-    pylab.plot(ns, esmf_eval_par, 'm--', ns, esmf_weights_par, 'm--')
+    pylab.plot(ns, esmf_eval_par, 'c--')
+    pylab.plot(ns, esmf_weights_par, 'c-')
+
 pylab.xlabel('num src cells * num dst cells')
 pylab.ylabel('time [sec]')
 pylab.title('conservative interpolation tripolar to rectilinear')
