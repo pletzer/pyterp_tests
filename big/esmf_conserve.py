@@ -73,18 +73,20 @@ def createData(filename, fieldname, coord_names):
     iEnd1 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
 
     # read the bound coordinates
-    boundLats = nc.variables[coord_names['lat_bounds']][:]
-    boundLons = nc.variables[coord_names['lon_bounds']][:]
+    boundLats = nc.variables[coord_names['lat_bounds']][iBeg0:iEnd0 - 1, iBeg1:iEnd1 - 1, :]
+    boundLons = nc.variables[coord_names['lon_bounds']][iBeg0:iEnd0 - 1, iBeg1:iEnd1 - 1, :]
 
     pointSizes = (boundLats.shape[0] + 1, boundLats.shape[1] + 1)
 
     # fill in the lat-lon ar the cell corner points
     lats = numpy.zeros(pointSizes, numpy.float64)
     lons = numpy.zeros(pointSizes, numpy.float64)
+
     lats[:-1, :-1] = boundLats[..., 0]
     lats[-1, :-1] = boundLats[-1, :, 1]
     lats[-1, -1]  = boundLats[-1, -1, 2]
     lats[:-1, -1]  = boundLats[:, -1, 3]
+
     lons[:-1, :-1] = boundLons[..., 0]
     lons[-1, :-1] = boundLons[-1, :, 1]
     lons[-1, -1]  = boundLons[-1, -1, 2]
@@ -94,8 +96,8 @@ def createData(filename, fieldname, coord_names):
     coordLonsPoint = grid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
 
     # set the ESMF coordinates
-    coordLatsPoint[...] = lats[iBeg0:iEnd0, iBeg1:iEnd1]
-    coordLonsPoint[...] = lons[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLatsPoint[:] = lats
+    coordLonsPoint[:] = lons
 
     # create and set the field, cell centred
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
