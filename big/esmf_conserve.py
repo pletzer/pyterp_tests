@@ -25,6 +25,12 @@ parser.add_argument('--src_file', type=str, dest='src_file', default='coords_CF_
 parser.add_argument('--src_field', type=str, dest='src_field', 
                     default='ocndepw',
                     help='Source data field name')
+parser.add_argument('--src_lat_bounds', type=str, dest='src_lat_bounds', 
+                    default='latw_bounds',
+                    help='Source latitude cell boundary array')
+parser.add_argument('--src_lon_bounds', type=str, dest='src_lon_bounds', 
+                    default='lonw_bounds',
+                    help='Source longitude cell boundary array')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
                     help='Destination data file name')
 parser.add_argument('--plot', dest='plot', action='store_true', help='Plot')
@@ -46,41 +52,34 @@ dst_file = args.dst_file.encode('UTF-8') # python3
 ndims = 2
 
 def createData(filename, fieldname, coord_names):
-    # read the netcdf data
-    # then pass the array to the ESMF API
+
+    # read the netcdf file header
     nc = netCDF4.Dataset(filename)
 
-    lats = nc.variables[coord_names['lat_bounds']] # reads the metadata associated with this variable
-    
-    # create the ESMF grid object
-    cellDims = numpy.array([lats.shape[0] - 1, lats.shape[1] - 1])
+    # get the local cell array sizes
+    cellDims = numpy.array(nc.variables[coord_names['lat_bounds']].shape[:2], numpy.int32)
+
+    # create the ESMF grid
+    print(cellDims)
     grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
+
+    # create coordinates
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER, coord_dim=LAT_INDEX)
-    grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER, coord_dim=LON_INDEX)
+    
 
-    # get the local start/end index sets
-    iBeg0Point = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
-    iEnd0Point = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
-    iBeg1Point = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
-    iEnd1Point = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
-
-    iBeg0Cell = grid.lower_bounds[ESMF.StaggerLoc.CENTER][LON_INDEX]
-    iEnd0Cell = grid.upper_bounds[ESMF.StaggerLoc.CENTER][LON_INDEX]
-    iBeg1Cell = grid.lower_bounds[ESMF.StaggerLoc.CENTER][LAT_INDEX]
-    iEnd1Cell = grid.upper_bounds[ESMF.StaggerLoc.CENTER][LAT_INDEX]
-
-    localSizesPoint = (iEnd0Point - iBeg0Point, iEnd1Point - iBeg1Point) # local number of points
-    localSizesCell = (iEnd0Cell - iBeg0Cell, iEnd1Cell - iBeg1Cell) # local number of cells
+    # read the cell centred field
+    cellData = nc.variables[fieldname][:]
 
     # read the bound coordinates
-    boundLats = nc.variables[coord_names['lat_bounds']][iBeg0Cell:iEnd0Cell, iBeg1Cell:iEnd1Cell, :]
-    boundLons = nc.variables[coord_names['lon_bounds']][iBeg0Cell:iEnd0Cell, iBeg1Cell:iEnd1Cell, :]
+    boundLats = nc.variables[coord_names['lat_bounds']][:]
+    boundLons = nc.variables[coord_names['lon_bounds']][:]
 
-    # fill in the lat-lon at the cell corner points
-    lats = numpy.zeros(localSizesPoint, numpy.float64)
-    lons = numpy.zeros(localSizesPoint, numpy.float64)
+    pointSizes = (boundLats.shape[0] + 1, boundLats.shape[1] + 1)
+
+    # fill in the lat-lon ar the cell corner points
+    lats = numpy.zeros(pointSizes, numpy.float64)
+    lons = numpy.zeros(pointSizes, numpy.float64)
     lats[:-1, :-1] = boundLats[..., 0]
     lats[-1, :-1] = boundLats[-1, :, 1]
     lats[-1, -1]  = boundLats[-1, -1, 2]
@@ -90,28 +89,35 @@ def createData(filename, fieldname, coord_names):
     lons[-1, -1]  = boundLons[-1, -1, 2]
     lons[:-1, -1]  = boundLons[:, -1, 3]
     
+
     coordLatsPoint = grid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     coordLonsPoint = grid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
 
-    # set the coordinate values
-    coordLatsPoint[...] = lats
-    coordLonsPoint[...] = lons
+    # get the local start/end index sets and set the point coordinates
+    iBeg0 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iEnd0 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iBeg1 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    iEnd1 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    # NEED TO CHECK ORDERING!!!
+    coordLatsPoint[...] = lats[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLonsPoint[...] = lons[iBeg0:iEnd0, iBeg1:iEnd1]
 
-    # create the field
+    # local sizes
+    nodeDims = (iEnd0 - iBeg0, iEnd1 - iBeg1)
+
+    # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
+    field.data[...] = cellData[iBeg0:iEnd0, iBeg1:iEnd1]
 
-    # read the cell data and set the field
-    field.data[...] = nc.variables[fieldname][iBeg0Cell:iEnd0Cell, iBeg1Cell:iEnd1Cell]
-
-    return grid, field, localSizesPoint
+    return grid, field, nodeDims
 
 timeStats = {
     'weights': float('nan'),
     'evaluation': float('nan'),
 }
 
-srcGrid, srcData, srcNodeDims = createData(src_file, args.src_field, {'lat_bounds': 'latw_bounds',
-                                                                     'lon_bounds': 'lonw_bounds',})
+srcGrid, srcData, srcNodeDims = createData(src_file, args.src_field, {'lat_bounds': args.src_lat_bounds,
+                                                                     'lon_bounds': args.src_lon_bounds,})
 dstGrid, dstData, dstNodeDims = createData(dst_file, 'cellData', {'lat_bounds': 'latMid_bnds',
                                                                   'lon_bounds': 'lonMid_bnds',})
 
