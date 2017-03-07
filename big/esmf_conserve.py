@@ -60,16 +60,23 @@ def createData(filename, fieldname, coord_names):
     cellDims = numpy.array(nc.variables[coord_names['lat_bounds']].shape[:2], numpy.int32)
 
     # create the ESMF grid
-    print(cellDims)
     grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
 
     # create coordinates
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER, coord_dim=LAT_INDEX)
+    grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER, coord_dim=LON_INDEX)
     
-
-    # read the cell centred field
-    cellData = nc.variables[fieldname][:]
+    # get the local start/end index sets and set the point coordinates
+    iBeg0Point = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iEnd0Point = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
+    iBeg1Point = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    iEnd1Point = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
+    iBeg0Cell = grid.lower_bounds[ESMF.StaggerLoc.CENTER][LON_INDEX]
+    iEnd0Cell = grid.upper_bounds[ESMF.StaggerLoc.CENTER][LON_INDEX]
+    iBeg1Cell = grid.lower_bounds[ESMF.StaggerLoc.CENTER][LAT_INDEX]
+    iEnd1Cell = grid.upper_bounds[ESMF.StaggerLoc.CENTER][LAT_INDEX]
 
     # read the bound coordinates
     boundLats = nc.variables[coord_names['lat_bounds']][:]
@@ -93,21 +100,20 @@ def createData(filename, fieldname, coord_names):
     coordLatsPoint = grid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     coordLonsPoint = grid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
 
-    # get the local start/end index sets and set the point coordinates
-    iBeg0 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
-    iEnd0 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LON_INDEX]
-    iBeg1 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
-    iEnd1 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
     # NEED TO CHECK ORDERING!!!
-    coordLatsPoint[...] = lats[iBeg0:iEnd0, iBeg1:iEnd1]
-    coordLonsPoint[...] = lons[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLatsPoint[...] = lats[iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
+    coordLonsPoint[...] = lons[iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
 
     # local sizes
-    nodeDims = (iEnd0 - iBeg0, iEnd1 - iBeg1)
+    nodeDims = (iEnd0Point - iBeg0Point, iEnd1Point - iBeg1Point)
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
-    field.data[...] = cellData[iBeg0:iEnd0, iBeg1:iEnd1]
+
+    # read the cell centred field
+    cellData = nc.variables[fieldname][:]
+
+    field.data[...] = cellData[iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
 
     return grid, field, nodeDims
 
