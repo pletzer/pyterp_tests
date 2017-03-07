@@ -104,27 +104,22 @@ def createData(filename, fieldname, coord_names):
     coordLatsPoint[...] = lats[iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
     coordLonsPoint[...] = lons[iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
 
-    # local sizes
-    nodeDims = (iEnd0Point - iBeg0Point, iEnd1Point - iBeg1Point)
-
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
 
-    # read the cell centred field
-    cellData = nc.variables[fieldname][:]
+    # read the cell centred data and set the field
+    field.data[...] = nc.variables[fieldname][iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
 
-    field.data[...] = cellData[iBeg0Point:iEnd0Point, iBeg1Point:iEnd1Point]
-
-    return grid, field, nodeDims
+    return grid, field
 
 timeStats = {
     'weights': float('nan'),
     'evaluation': float('nan'),
 }
 
-srcGrid, srcData, srcNodeDims = createData(src_file, args.src_field, {'lat_bounds': args.src_lat_bounds,
+srcGrid, srcData = createData(src_file, args.src_field, {'lat_bounds': args.src_lat_bounds,
                                                                      'lon_bounds': args.src_lon_bounds,})
-dstGrid, dstData, dstNodeDims = createData(dst_file, 'cellData', {'lat_bounds': 'latMid_bnds',
+dstGrid, dstData = createData(dst_file, 'cellData', {'lat_bounds': 'latMid_bnds',
                                                                   'lon_bounds': 'lonMid_bnds',})
 
 # save the reference (exact) field data
