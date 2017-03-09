@@ -7,7 +7,7 @@ This repository contains curvilinear interpolation tests.
 ## Prequisites
 
  * Anaconda python 2.7 with numpy 1.11.1 or later
- * Iris 1.10.0-DEV. Install with `conda install -c scitools iris`
+ * Iris 1.10.0-DEV. Install with `conda install -c scitools iris` and `conda install -c scitools nc_time_axis`
  * ESMF/ESMPy 7.0.0 or later [https://www.earthsystemcog.org/projects/esmpy/]
      
 Typical build instructions on Linux
