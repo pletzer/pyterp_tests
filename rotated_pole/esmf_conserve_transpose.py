@@ -46,8 +46,8 @@ def createData(filename, prefix):
     latsPoint = coordsPoint[0].points
     lonsPoint = coordsPoint[1].points
     
-    # create the ESMF grid object
-    cellDims = numpy.array([latsPoint.shape[0] - 1, latsPoint.shape[1] - 1])
+    # create the ESMF grid object, reverse index order
+    cellDims = numpy.array([latsPoint.shape[1] - 1, latsPoint.shape[0] - 1])
     grid = ESMF.Grid(max_index=cellDims, coord_sys=ESMF.api.constants.CoordSys.SPH_DEG) #, num_peri_dims=1, periodic_dim=1)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LAT_INDEX)
     grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER, coord_dim=LON_INDEX)
@@ -61,15 +61,15 @@ def createData(filename, prefix):
     iBeg1 = grid.lower_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
     iEnd1 = grid.upper_bounds[ESMF.StaggerLoc.CORNER][LAT_INDEX]
     # NEED TO CHECK ORDERING!!!
-    coordLatsPoint[...] = latsPoint[iBeg0:iEnd0, iBeg1:iEnd1]
-    coordLonsPoint[...] = lonsPoint[iBeg0:iEnd0, iBeg1:iEnd1]
+    coordLatsPoint[...] = latsPoint.transpose()
+    coordLonsPoint[...] = lonsPoint.transpose()
 
     # local sizes
     nodeDims = (iEnd0 - iBeg0, iEnd1 - iBeg1)
 
     # create and set the field
     field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
-    field.data[...] = cubeCell.data[iBeg0:iEnd0, iBeg1:iEnd1]
+    field.data[...] = cubeCell.data[iBeg1:iEnd1, iBeg0:iEnd0].transpose()
 
     return grid, field, nodeDims
 
