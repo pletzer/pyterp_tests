@@ -94,8 +94,7 @@ dst = createData(dst_file, b"dst")
 dstDataRef = dst['data'].copy()
 dst['data'][...] = -1
 
-# compute the interpolation weights
-tic = time.time()
+# compute the interpolation weights using esmf
 regrid = ESMF.api.regrid.Regrid(src['esmf_field'], dst['esmf_field'],
                                 src_mask_values=None, dst_mask_values=None,
                                 regrid_method=ESMF.api.constants.RegridMethod.CONSERVE,
@@ -106,32 +105,25 @@ regrid = ESMF.api.regrid.Regrid(src['esmf_field'], dst['esmf_field'],
                                 unmapped_action=ESMF.api.constants.UnmappedAction.IGNORE, 
                                 ignore_degenerate=True, # produce an error if two points are degenerate and if set to False
                                 src_frac_field=None, dst_frac_field=None)
-timeStats['weights'] = time.time() - tic
 
-# interpolate
-tic = time.time()
+# interpolate using esmf
 regrid(src['esmf_field'], dst['esmf_field'])
 
-timeStats['evaluation'] = time.time() - tic
+# sigrid
+# compute the interpolation weights
+interp = sigrid.conserveInterp2D.ConserveInterp2D()
+interp.setDstGrid(dst['xPoint'], dst['yPoint'])
+periodicity = (False, True) # NEED TO CHECK PERIODICITY
+interp.setSrcGrid(periodicity, src['xPoint'], src['yPoint'])
+interp.computeWeights()
+# interpolate
+dstDataSigrid = interp.apply(src['data'])
 
-# compute error
+
+# compute difference
 srcNtot = len(src['esmf_field'].data.flat)
 dstNtot = len(dst['esmf_field'].data.flat)
-error =  numpy.sum(abs(dst['esmf_field'].data - dstDataRef)) / float(dstNtot)
-print('emsf interpolation:')
-print('\tsrc: {} ntot: {}'.format(src['dims'], srcNtot))
-print('\tdst: {} ntot: {}'.format(dst['dims'], dstNtot))
-print('interpolation error: {:.3g}'.format(error))
-totTime = 0.0
-print('time stats:')
-for k, v in timeStats.items():
-    print('\t{0:<32} {1:>.3g} sec'.format(k, v))
-    totTime += v
-print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
-
-# check sum
-checksum = numpy.sum(dst['esmf_field'].data, axis=None)
-print('check sum: {:.15g}'.format(checksum))
+diff =  dst['esmf_field'].data - dstDataSigrid
 
 # plot
 xIndex, yIndex = 0, 1
@@ -142,5 +134,6 @@ yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint
 
 if args.plot:
     from matplotlib import pylab
-    pylab.pcolor(xxCell, yyCell, dst['esmf_field'].data, vmin=-1.0, vmax=1.0)
+    p = pylab.pcolor(xxCell, yyCell, diff, vmin=-1.e-13, vmax=1.e-13)
+    pylab.colorbar(p)
     pylab.show()
