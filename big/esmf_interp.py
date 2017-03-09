@@ -111,7 +111,7 @@ timeStats['evaluation'] = time.time() - tic
 srcNtot = len(srcData.data.flat)
 dstNtot = len(dstData.data.flat)
 error =  numpy.sum(abs(dstData.data - dstDataRef)) / float(dstNtot)
-print('emsf interpolation:')
+print('esmf interpolation:')
 print('\tsrc: {} ntot: {}'.format(srcNodeDims, srcNtot))
 print('\tdst: {} ntot: {}'.format(dstNodeDims, dstNtot))
 print('interpolation error: {:.3g}'.format(error))

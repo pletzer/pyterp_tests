@@ -81,7 +81,8 @@ Libcf is faster than ESMF for high resolution (total number of source and destin
 
 ### Tripolar grid to uniform grid
 
-The source is a tripolar grid of fixed resolution 3606 x 4322. The destination grid's resolution is varied. 
+The source is a tripolar grid of fixed resolution 3606 x 4322. The destination grid's resolution is varied.
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding")
 
 ## Summary and recommendations
 

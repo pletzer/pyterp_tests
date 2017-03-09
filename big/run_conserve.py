@@ -98,7 +98,7 @@ f.close()
 from matplotlib import pylab
 import matplotlib
 
-legs = ['emsf eval', 'esmf wgts',]
+legs = ['esmf eval', 'esmf wgts',]
 
 pylab.loglog(ns, esmf_eval, 'ro', markersize=8)
 pylab.loglog(ns, esmf_weights, 'rs', markersize=8)
