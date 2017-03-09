@@ -34,8 +34,8 @@ dst_celldims = [(10, 20),
                 (320, 640),
                 (640, 1280),
                 (1280, 2560),
-                (2560, 5120),
-                (5120, 10240)]
+                (2560, 5120),]
+                #(5120, 10240)]
 
 
 ns = []
@@ -108,11 +108,11 @@ if args.nprocs > 1:
     legs += ['esmf eval {}p'.format(args.nprocs), 'esmf wgts {}p'.format(args.nprocs)]
 pylab.legend(legs, loc=4)
 
-pylab.plot(ns, esmf_eval, 'r--')
-pylab.plot(ns, esmf_weights, 'r-')
+pylab.plot(ns, esmf_eval, 'r-')
+pylab.plot(ns, esmf_weights, 'r--')
 if args.nprocs > 1:
-    pylab.plot(ns, esmf_eval_par, 'c--')
-    pylab.plot(ns, esmf_weights_par, 'c-')
+    pylab.plot(ns, esmf_eval_par, 'c-')
+    pylab.plot(ns, esmf_weights_par, 'c--')
 
 pylab.xlabel('num src cells * num dst cells')
 pylab.ylabel('time [sec]')
