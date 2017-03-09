@@ -96,8 +96,13 @@ interpolation (dashed lines). Running in parallel only moderately reduces overal
  * Only one package supports bilinear and conservative interpolation on general structured grids: ESMF. The package also supports regridding on 
  unstructured grids in up to 3 dimensions.
 
+ * In contrast to libcf, ESMF bilinear will not interpolate data in cells which have invalid nodes. 
+
  * There appears some initial overhead in computing the weights with ESMF, which appears to depend mostly on the source grid resolution with little dependence on the target grid resolution. Libcf, which uses a Newton algorithm to locate the target cells, has more favourable scaling for 
  low resolution source grid but this advantage almost vanishes as the target grid resolution exceeds the source grid resolution.
 
- 
+ * Our recommendation is to implement ESMF conservative and bilinear into iris with support for general structured grids (both source and destination). Ideally, regridding should be a class taking source and destination grids at construction. Given the cost of computing the interpolation weights, 
+ it would be advantageous to have methods to store the weights to disk and load the weights from disk. Finally there should be an evaluation step 
+ which fills the field with interpolated values.
+
 
