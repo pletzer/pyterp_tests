@@ -133,7 +133,7 @@ for k, v in timeStats.items():
 
 if pe == 0:
     error = globalSumError / float(globalDstNtot)
-    print('emsf interpolation:')
+    print('esmf interpolation:')
     print('\tsrc: ntot: {}'.format(globalSrcNtot))
     print('\tdst: ntot: {}'.format(globalDstNtot))
     print('interpolation error: {:.3g}'.format(error))
