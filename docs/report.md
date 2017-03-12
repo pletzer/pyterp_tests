@@ -1,26 +1,28 @@
 # Comparison of regridding packages used for climate/weather data
 
+Alex Pletzer, 13 March 2017
+
 ## Overview
 
-Regridding, that is the process of mapping fields from a source grid to another destination grid,
+Regridding, that is the process of mapping fields from one grid to another,
 is widely used in pre- and post-processing tools. Here we provide a comparison of regridding tools in terms of:
 
  * Accuracy
  * Numerical performance (execution time and memory footprint)
- * And their ability to handle masking (invalid data)
+ * Their ability to handle masking (invalid data)
 
- We will use 2D structured grids for input data. Uniform latitude/longitude grids will be used as target grids (most regridding packages support any type of target grids). 
+We will use 2D structured grids for input data. Uniform latitude/longitude grids will be used as target grids (most regridding packages support any type of target grids). 
 
 The regridding tools we considered are:
 
- * Iris built-in regridding
- * libcf 1.6.9
- * sigrid
- * ESMF 7.0
+ * Iris 1.10.0-DEV's built-in regridding. Iris is community driven Python library for analyzing earth science data sets. Iris can be installed with `conda install -c scitools iris`.
+ * libcf 1.6.9 and its Python interface. Libcf was developed at UCAR to address the need to produce and read CF compliant files. The library also supports regriding. Libcf can be installed with `pip install pycf`. 
+ * sigrid, a github project that computes the intersection of structured grids: `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install` 
+ * The Earth System Modeling Framework ESMF 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: [https://www.earthsystemcog.org/projects/esmf/]
 
- The considered interpolation methods are bilinear and conservative. Bilinear is suitable for nodal 
- data whereas conservative should be applied to cell centred data for which there is a need to 
- conserve global quantities such as mass, energy, etc. None of these methods are appropriate for 
+Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear is suitable for nodal 
+ data whereas conservative should be applied to cell centred data. Conservative regridding 
+ conserves global quantities such as mass, energy, etc. None of these methods are appropriate for 
  vector fields for which the components are staggered (eg Arakawa C-grid staggering).
 
  The capabilities of the considered regridding tools are summarized below:
@@ -38,21 +40,21 @@ interpolation in n-dimensions while ESMF supports interpolation from and onto un
 
 ## Accuracy
 
-### Bilinear
+### Bilinear regridding
 
-Simple sinusoidal field on a uniform source grid with invalid data inside a quarter of a disk. Shown are 
-the source field values on nodes and the interpolated fields values on the much finer destination grid.
-Invalid points are shows as grey cubes. 
+A simple sinusoidal field on a uniform source grid with invalid data inside a quarter of a disk is chosen. Shown are 
+the source field values on nodes (large spheres) and their interpolated values on the much finer destination grid (small spheres).
+Invalid points are shown as grey cubes. 
 
-For ESMF, notice that destination points falling inside source cells that have an invalid node are not interpolated: 
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png "ESMF bilinear regridding of masked field")
-
-In the case of libcf on the other hand, destination points will be interpolated if they fall within a valid triangle subcell, leading 
-to a smoother transition from valid to invalid regions:
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png "libcf bilinear regridding of masked field")
+For ESMF, the destination points falling inside partially valid source cells, i.e. cells that have at least one invalid node, are not interpolated. In the case of libcf on the other hand, destination points will be interpolated if these fall within a valid triangular subcell. As such, libcf will give a smoother transition from valid to invalid regions.
 
 
-### Conservative
+ESMF bilinear with masked data | libcf bilinear with masked data
+:-----------------------------:|:--------------------------------:
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png "ESMF bilinear regridding of masked field")                        | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png "libcf bilinear regridding of masked field")
+
+
+### Conservative regridding
 
 ## Performance
 
@@ -91,10 +93,10 @@ interpolation (dashed lines). Running in parallel only moderately reduces overal
 
  * The method of regridding depends on the field. Cell centred fields with bounds arrays require conservative interpolations as they associate average values across cells. Field values attached to cell nodes should use bilinear interpolation.
 
- * Regardless of whether bilinear interpolation or conservative interpolation is used, the computation of the interpolation weights is typically orders of magnitudes slower than the evaluation of the interpolation. Hence, we recommend to split the weight computation from the interpolation proper. This will allow users to amortize the cost of computing the interpolation weights, particularly in scenarios where the field is time dependent or has a vertical axis. The same interpolation weights can also be used for other fields provided they share the same staggering and grid. 
+ * Regardless of whether bilinear interpolation or conservative interpolation is used, the computation of the interpolation weights is typically orders of magnitudes slower than the evaluation of the interpolation. Hence, we recommend to split the weight computation from the interpolation proper. This will allow users to amortize the cost of computing the interpolation weights, particularly in scenarios where the field is time dependent or has a vertical axis. The same interpolation weights can also be used for other fields provided they share the same staggering and grids. 
 
- * Only one package supports bilinear and conservative interpolation on general structured grids: ESMF. The package also supports regridding on 
- unstructured grids in up to 3 dimensions.
+ * Only one package (ESMF) supports bilinear and conservative interpolation on general structured grids. ESMF also supports regridding on 
+ unstructured grids in up to 3 dimensions and second order accutate interpolation for nodal data. Second order accurate conservative interpolation will become available in version 7.1.
 
  * In contrast to libcf, ESMF bilinear will not interpolate data in cells which have invalid nodes. 
 
