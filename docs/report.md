@@ -64,9 +64,7 @@ shows the difference between the regridded ESMF and sigrid fields, which is of o
 
 Source grid (black) and destination field/grid | Difference between ESMF and sigrid regridding
 :---------------------------------------------:|:---------------------------------------------:
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/polar/srcAndDst.png "Src and dst grids") 
-                                               | 
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/polar/srcAndDst.png "Difference between ESMF and sigrid")
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/polar/srcAndDst.png "Src and dst grids") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/polar/esmfMinusSigrid.png "Difference between ESMF and sigrid")
 
 
 ## Performance
