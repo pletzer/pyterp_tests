@@ -59,7 +59,7 @@ ESMF bilinear with masked data | libcf bilinear with masked data
 ### Conservative regridding accuracy
 
 To evaluate the accuracy of conservative regridding, we chose a polar source grid with a sine wave imprinted on it. The 
-Cartesian destination grid was chosen to be entirely contained within the source grid as shown below. The second picture 
+Cartesian destination grid was chosen to be entirely contained within the source grid as shown below. The picture to the right
 shows the difference between the regridded ESMF and sigrid fields, which is of order 1.e-10 or smaller.
 
 Source grid (black) and destination field/grid | Difference between ESMF and sigrid regridding
@@ -71,27 +71,29 @@ Source grid (black) and destination field/grid | Difference between ESMF and sig
 
 ### Uniform to uniform grid
 
-The following shows the execution time required to regrid a uniform source field on a uniform grid to a uniform destination grid. Both the source and destination grid resolutions are varied.
+The execution time required to regrid a source field on a uniform grid to a uniform destination grid is measured. Both the source and destination grid resolutions are varied.
 
-Iris and ESMF require about the same time for conservative interpolation, a somewhat surprising result given that ESMF supports 
-generic structured and unstructured grids (iris's conservative regridding is restricted to works uniform source/destination grids).
+Conservative regridding with ESMF is one order of magnitude slower than sigrid. Bilinear ESMF regridding is 2x faster than conservative ESMF. Libcf is nearly an order of magnitude faster than bilinear ESMF and bilinear iris is another two aroders of magnitudes faster. 
 
-The fastest bilinear interpolation is obtained with iris. Next, libcf is almost two orders of magnitudes slower. ESMF bilinear is almost another order of magnitudes slower than libcf.
+A surprising result is that conservative iris and ESMF regridding run neck to neck - there is no performance penalty in using ESMF, which is more general than iris's regridding. Recall that iris's conservative regridding is restricted to uniform source and destination grids.
 
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/uniform/run.png "comparing the execution times of different regridding methods and packages")
 
 
 ### Rotated pole to uniform grid
 
-The source (green) and destination grids (red) are shown below
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/rotated_pole_grid.png "rotated pole to uniform grid")
+Rotated pole grids are widely used in regional models as a way to circumvent the problem of poles. These grids share many 
+characteristics of curvilinear grids with: significant bending of the grid lines and the presence of poles, which tend to 
+be problematic for regridding tools. Shown below are the execution times split between the computation of interpolation 
+weights (wgts) and the application of the weihgts to the source field (eval) for bilinear and conservative regridding.
+The evaluation step is typically orders of magnituds faster than the computation of weights,
+indicating the need to reuse the weights whenever possible. Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage mostly disappears at very high resolutions. Conservative interpolation is only a facto 2x slower than ESMF bilinear at very high resolution. 
 
-Execution times are split between computing the interpolatiion weights (wgts) and applying the weights to the source field to evaluate the inteprolation (eval). The evaluation step is typically orders of magnituds faster than the computation of weights,
-indicated the need to reuse the weights whenever possible. Ideally, users should be able to store the weights on disk for 
-reuse. 
+Source (green) and destination (red) grids     | Regridding execution times
+:---------------------------------------------:|:---------------------------------------------:
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/rotated_pole_grid.png "rotated pole to uniform grid") |
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/run.png "execution times for rotated pole to uniform regridding")
 
-Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage seems to mostly disappear at very large resolutions. Conservative interpolation is only a facto 2x slower than ESMF bilinear at very high resolution. 
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/run.png "rotated pole to uniform regridding")
 
 ### Tripolar grid to uniform grid
 
