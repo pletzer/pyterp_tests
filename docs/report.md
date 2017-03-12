@@ -1,6 +1,8 @@
 # Comparison of regridding packages used for climate/weather data
 
-Alex Pletzer, 13 March 2017
+Alex Pletzer (NIWA/NeSI), Chris Scott (NeSI) and Jamie Kettleborough (UK Met Office)
+
+13 March 2017
 
 ## Overview
 
@@ -46,7 +48,7 @@ A simple sinusoidal field on a uniform source grid with invalid data inside a qu
 the source field values on nodes (large spheres) and their interpolated values on the much finer destination grid (small spheres).
 Invalid points are shown as grey cubes. 
 
-For ESMF, the destination points falling inside partially valid source cells, i.e. cells that have at least one invalid node, are not interpolated. In the case of libcf on the other hand, destination points will be interpolated if these fall within a valid triangular subcell. As such, libcf will give a smoother transition from valid to invalid regions.
+For ESMF, destination points falling inside partially valid source cells, i.e. cells that have at least one invalid node, are not interpolated. In the case of libcf on the other hand, destination points will be interpolated if these fall within a valid triangular subcell. As such, libcf will give a smoother transition from valid to invalid regions.
 
 
 ESMF bilinear with masked data | libcf bilinear with masked data
@@ -60,7 +62,7 @@ ESMF bilinear with masked data | libcf bilinear with masked data
 
 ### Uniform to uniform grid
 
-The following shows the execution time required to regrid uniform source and destination grids of various resolutions. 
+The following shows the execution time required to regrid a uniform source field on a uniform grid to a uniform destination grid. Both the source and destination grid resolutions are varied.
 
 Iris and ESMF require about the same time for conservative interpolation, a somewhat surprising result given that ESMF supports 
 generic structured and unstructured grids (iris's conservative regridding is restricted to works uniform source/destination grids).
