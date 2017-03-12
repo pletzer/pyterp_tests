@@ -83,16 +83,18 @@ A surprising result is that conservative iris and ESMF regridding run neck to ne
 ### Rotated pole to uniform grid
 
 Rotated pole grids are widely used in regional models as a way to circumvent the problem of poles. These grids share many 
-characteristics of curvilinear grids with: significant bending of the grid lines and the presence of poles, which tend to 
-be problematic for regridding tools. Shown below are the execution times split between the computation of interpolation 
-weights (wgts) and the application of the weihgts to the source field (eval) for bilinear and conservative regridding.
+characteristics of curvilinear grids, including significant bending of the grid lines and the presence of poles, which tend to 
+be problematic for many regridding tools. Shown below are the execution times split between the computation of interpolation 
+weights (wgts) and the application of the weights to the source field (eval) for bilinear and conservative regridding.
+
 The evaluation step is typically orders of magnituds faster than the computation of weights,
-indicating the need to reuse the weights whenever possible. Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage mostly disappears at very high resolutions. Conservative interpolation is only a facto 2x slower than ESMF bilinear at very high resolution. 
+indicating the need to reuse the weights whenever possible. 
+
+Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage mostly disappears at very high resolutions. Conservative interpolation is only a facto 2x slower than ESMF bilinear at very high resolution. 
 
 Source (green) and destination (red) grids     | Regridding execution times
 :---------------------------------------------:|:---------------------------------------------:
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/rotated_pole_grid.png "rotated pole to uniform grid") |
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/run.png "execution times for rotated pole to uniform regridding")
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/rotated_pole_grid.png "rotated pole to uniform grid") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/rotated_pole/run.png "execution times for rotated pole to uniform regridding")
 
 
 ### Tripolar grid to uniform grid
