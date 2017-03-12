@@ -17,10 +17,10 @@ We will use 2D structured grids for input data. Uniform latitude/longitude grids
 
 The regridding tools we considered are:
 
- * Iris 1.10.0-DEV's built-in regridding. Iris is community driven Python library for analyzing earth science data sets. Iris can be installed with `conda install -c scitools iris`.
- * libcf 1.6.9 and its Python interface. Libcf was developed at UCAR to address the need to produce and read CF compliant files. The library also supports regriding. Libcf can be installed with `pip install pycf`. 
- * sigrid, a github project that computes the intersection of structured grids: `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install` 
- * The Earth System Modeling Framework ESMF 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: [https://www.earthsystemcog.org/projects/esmf/]
+ * *iris* 1.10.0-DEV's built-in regridding. Iris is a community driven Python library for analyzing earth science data sets. Iris can be installed with `conda install -c scitools iris`.
+ * *libcf* 1.6.9 and its Python interface. Libcf was developed at UCAR to address the need to produce and read CF compliant files. The library also supports regriding. Libcf can be installed with `pip install pycf`. 
+ * *sigrid* is a github project that computes the intersection of structured grids: `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install` 
+ * The Earth System Modeling Framework *ESMF* 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: https://www.earthsystemcog.org/projects/esmf/
 
 Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear is suitable for nodal 
  data whereas conservative should be applied to cell centred data. Conservative regridding 
@@ -42,7 +42,7 @@ interpolation in n-dimensions while ESMF supports interpolation from and onto un
 
 ## Accuracy
 
-### Bilinear regridding
+### Bilinear regridding accuracy
 
 A simple sinusoidal field on a uniform source grid with invalid data inside a quarter of a disk is chosen. Shown are 
 the source field values on nodes (large spheres) and their interpolated values on the much finer destination grid (small spheres).
@@ -56,7 +56,18 @@ ESMF bilinear with masked data | libcf bilinear with masked data
 ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_esmf1_dst.png "ESMF bilinear regridding of masked field")                        | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/masking/vis_libcf1_dst.png "libcf bilinear regridding of masked field")
 
 
-### Conservative regridding
+### Conservative regridding accuracy
+
+To evaluate the accuracy of conservative regridding, we chose a polar source grid with a sine wave imprinted on it. The 
+Cartesian destination grid was chosen to be entirely contained within the source grid as shown below. The second picture 
+shows the difference between the regridded ESMF and sigrid fields, which is of order 1.e-10 or smaller.
+
+Source grid (black) and destination field/grid | Difference between ESMF and sigrid regridding
+:---------------------------------------------:|:---------------------------------------------:
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/polar/srcAndDst.png "Src and dst grids") 
+                                               | 
+![alt text](https://github.com/pletzer/pyterp_tests/blob/master/polar/srcAndDst.png "Difference between ESMF and sigrid")
+
 
 ## Performance
 

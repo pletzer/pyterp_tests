@@ -11,7 +11,7 @@ import time
 # turn on logging
 esmpy = ESMF.Manager(debug=True)
 
-parser = argparse.ArgumentParser(description='Conservatively interpolate using ESMF')
+parser = argparse.ArgumentParser(description='Compare sigrid and ESMF interpolation')
 parser.add_argument('--src_file', type=str, dest='src_file', default='src.nc',
                     help='Source data file name')
 parser.add_argument('--dst_file', type=str, dest='dst_file', default='dst.nc',
@@ -134,6 +134,50 @@ yyCell = 0.25 * (yPoint[0:-1, 0:-1] + yPoint[1:, 0:-1] + yPoint[1:, 1:] + yPoint
 
 if args.plot:
     from matplotlib import pylab
-    p = pylab.pcolor(xxCell, yyCell, diff, vmin=-1.e-13, vmax=1.e-13)
+
+    maxDiff = max(abs(diff.max()), abs(diff.min()))
+    xx = src['xPoint']
+    yy = src['yPoint']
+    steps = [(xx.shape[0] - 1)//20, (xx.shape[1] - 1)//20]
+
+    pylab.figure(1)
+    # plot the source grid
+    for i in range(0, xx.shape[0], steps[0]):
+        pylab.plot(xx[i, :], yy[i, :], 'k-')
+    for j in range(0, xx.shape[1], steps[1]):
+        pylab.plot(xx[:, j], yy[:, j], 'k-')
+    p = pylab.pcolor(xxCell, yyCell, dstDataRef, vmin=-1.0, vmax=1.0)
     pylab.colorbar(p)
+    pylab.title('src grid and cell-centred field on dst grid')
+
+    pylab.figure(2)
+    # plot the source grid
+    for i in range(0, xx.shape[0], steps[0]):
+        pylab.plot(xx[i, :], yy[i, :], 'k-')
+    for j in range(0, xx.shape[1], steps[1]):
+        pylab.plot(xx[:, j], yy[:, j], 'k-')
+    p = pylab.pcolor(xxCell, yyCell, dst['esmf_field'].data - dstDataRef, vmin=-5.e-3, vmax=5.e-3)
+    pylab.colorbar(p)
+    pylab.title('ESMF - exact mid-point')
+
+    pylab.figure(3)
+    # plot the source grid
+    for i in range(0, xx.shape[0], steps[0]):
+        pylab.plot(xx[i, :], yy[i, :], 'k-')
+    for j in range(0, xx.shape[1], steps[1]):
+        pylab.plot(xx[:, j], yy[:, j], 'k-')
+    p = pylab.pcolor(xxCell, yyCell, dstDataSigrid - dstDataRef, vmin=-5.e-3, vmax=5.e-3)
+    pylab.colorbar(p)
+    pylab.title('sigrid - exact mid-point')
+
+    pylab.figure(4)
+    # plot the source grid
+    for i in range(0, xx.shape[0], steps[0]):
+        pylab.plot(xx[i, :], yy[i, :], 'k-')
+    for j in range(0, xx.shape[1], steps[1]):
+        pylab.plot(xx[:, j], yy[:, j], 'k-')
+    p = pylab.pcolor(xxCell, yyCell, dst['esmf_field'].data - dstDataSigrid, vmin=-1.e-10, vmax=1.e-10)
+    pylab.colorbar(p)
+    pylab.title('ESMF - sigrid')
+
     pylab.show()
