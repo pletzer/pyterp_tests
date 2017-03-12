@@ -44,6 +44,8 @@ dstCube = createData(dst_file, "dst")
 # save the reference (exact) field data
 dstDataRef = dstCube.data.copy()
 
+print(srcCube)
+
 # compute the interpolation weights
 scheme = iris.analysis.Linear()
 tic = time.time()
