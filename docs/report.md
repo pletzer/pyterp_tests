@@ -106,9 +106,12 @@ The source is a tripolar grid of fixed resolution 3606 x 4322 with the destinati
 times for computing the conservative interpolation weights (solid lines) and the time to evaluate the conservative 
 interpolation (dashed lines). Running in parallel only moderately reduces overall wall clock time. 
 
-| Serial vs MPI 4 processor execution                |
-|:--------------------------------------------------:|
-|![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding") |
+Also shown is the peak memory consumption returned by the SLURM scheduler on Pan (magenta) and the value that obtained by eye balling the 
+Unix `top` command (cyan) while the application ran. The cyan curve may represent more an average.  
+
+| Serial vs MPI 4 processor execution                |  Memory conumption (serial)                                                           
+|:--------------------------------------------------:|:------------------------------------------------------------------------------:
+|![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
 
 ## Summary and recommendations
 

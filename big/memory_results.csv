@@ -1,4 +1,4 @@
-Dst grid points, MaxRSS (bytes), top % memory (64GB), top memory GB
+Dst grid points, MaxRSS (kbytes), top % memory (64GB), top memory GB
 200,  17468956, 17.1, 11
 800,  18334676, 17.1, 11 
 3200,  18522504, 17.1, 11
