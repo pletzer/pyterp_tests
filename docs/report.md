@@ -77,9 +77,9 @@ Conservative regridding with ESMF is one order of magnitude slower than sigrid. 
 
 A surprising result is that conservative iris and ESMF regridding run neck to neck - there is no performance penalty in using ESMF, which is more general than iris's regridding. Recall that iris's conservative regridding is restricted to uniform source and destination grids.
 
-Comparing the cost of different regridding schemes
-:--------------------------------------------------:
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/uniform/run.png "comparing the execution times of different regridding methods and packages")
+| Comparing the cost of different regridding schemes |
+|:--------------------------------------------------:|
+|![alt text](https://github.com/pletzer/pyterp_tests/blob/master/uniform/run.png "comparing the execution times of different regridding methods and packages")|
 
 
 ### Rotated pole to uniform grid
