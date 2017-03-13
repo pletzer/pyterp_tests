@@ -104,12 +104,14 @@ Source (green) and destination (red) grids     | Regridding execution times
 
 The source is a tripolar grid of fixed resolution 3606 x 4322 with the destination grid's resolution being varied. Shown are the execution
 times for computing the conservative interpolation weights (solid lines) and the time to evaluate the conservative 
-interpolation (dashed lines). Running in parallel only moderately reduces overall wall clock time. 
+interpolation (dashed lines). Running in parallel only moderately reduces the overall wall clock time. 
 
-Also shown is the peak memory consumption returned by the SLURM scheduler on Pan (magenta) and the value that obtained by eye balling the 
-Unix `top` command (cyan) while the application ran. The cyan curve may represent more an average.  
+Also shown is the peak memory consumption returned by the SLURM scheduler on Pan (magenta) and the value obtained by eye balling the 
+Unix `top` command (cyan) while the application ran. As such the cyan curve has much lower sampling frequency and should be regarded 
+as a time average of the cyan curve. From the data required to store the source grid, its coordinates and the fields we the meory footprint
+to be 0.5GB (compare to 10GB observed). Thus, conservative regridding requires 20-50x more memory than would be required to store the data only.
 
-| Serial vs MPI 4 processor execution                |  Memory conumption (serial)                                                           
+| ESMF conservative serial vs MPI 4 processor execution                |  ESMF conservative memory consumption (serial)                                                           
 |:--------------------------------------------------:|:------------------------------------------------------------------------------:
 |![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
 
