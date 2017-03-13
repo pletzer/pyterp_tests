@@ -7,20 +7,21 @@ Alex Pletzer (NIWA/NeSI), Chris Scott (NeSI) and Jamie Kettleborough (UK Met Off
 ## Overview
 
 Regridding, that is the process of mapping fields from one grid to another,
-is widely used in pre- and post-processing tools. Here we provide a comparison of regridding tools in terms of:
+is widely used in pre- and post-processing tools. Here we provide a comparison of existing and newly developed regridding tools. We 
+will look at:
 
  * Accuracy
  * Numerical performance (execution time and memory footprint)
- * Their ability to handle masking (invalid data)
+ * Ability to handle masking (invalid data)
 
-We will use 2D structured grids for input data. Uniform latitude/longitude grids will be used as target grids (most regridding packages support any type of target grids). 
+Our emphasis will be on general, 2D structured source grids. Uniform latitude/longitude grids will be used as target grids (most regridding packages support any type of target grids). 
 
-The regridding tools we considered are:
+The regridding tools we consider are:
 
- * *iris* 1.10.0-DEV's built-in regridding. Iris is a community driven Python library for analyzing earth science data sets. Iris can be installed with `conda install -c scitools iris`.
- * *libcf* 1.6.9 and its Python interface. Libcf was developed at UCAR to address the need to produce and read CF compliant files. The library also supports regriding. Libcf can be installed with `pip install pycf`. 
- * *sigrid* is a github project that computes the intersection of structured grids: `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install` 
- * The Earth System Modeling Framework *ESMF* 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: https://www.earthsystemcog.org/projects/esmf/
+ * **iris** 1.10.0-DEV's built-in regridding. Iris is a community driven Python library for analyzing earth science data sets. Iris can be installed with `conda install -c scitools iris`.
+ * **libcf** 1.6.9 and its Python interface. Libcf was developed at UCAR to address the need to produce and read CF compliant files. The library also supports regriding. Libcf can be installed with `pip install pycf`. 
+ * **sigrid** is a github project that computes the intersection of structured grids: `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install` 
+ * The Earth System Modeling Framework **ESMF** 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: https://www.earthsystemcog.org/projects/esmf/
 
 Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear is suitable for nodal 
  data whereas conservative should be applied to cell centred data. Conservative regridding 
@@ -101,10 +102,13 @@ Source (green) and destination (red) grids     | Regridding execution times
 
 ### Tripolar grid to uniform grid
 
-The source is a tripolar grid of fixed resolution 3606 x 4322. The destination grid's resolution is varied. Shown are the execution
+The source is a tripolar grid of fixed resolution 3606 x 4322 with the destination grid's resolution being varied. Shown are the execution
 times for computing the conservative interpolation weights (solid lines) and the time to evaluate the conservative 
 interpolation (dashed lines). Running in parallel only moderately reduces overall wall clock time. 
-![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding")
+
+| Serial vs MPI 4 processor execution                |
+|:--------------------------------------------------:|
+|![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding") |
 
 ## Summary and recommendations
 
