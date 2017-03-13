@@ -21,7 +21,8 @@ The regridding tools we consider are:
  * **iris** 1.10.0-DEV's built-in regridding. Iris is a community driven Python library for analyzing earth science data sets. Iris can be installed with `conda install -c scitools iris`.
  * **libcf** 1.6.9 and its Python interface. Libcf was developed at UCAR to address the need to produce and read CF compliant files. The library also supports regriding. Libcf can be installed with `pip install pycf`. 
  * **sigrid** is a github project that computes the intersection of structured grids: `git clone https://github.com/pletzer/sigrid && cd sigrid && python setup.py install` 
- * The Earth System Modeling Framework **ESMF** 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: https://www.earthsystemcog.org/projects/esmf/
+ * The Earth System Modeling Framework **ESMF** 7.0 is a high performance software for building coupled earth modeling applications. ESMF includes a regridding class with a Python callable interface: https://www.earthsystemcog.org/projects/esmf/. ESMF can be installed with 
+ `conda install -c conda-forge esmpy=7.0.0`.
 
 Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear is suitable for nodal 
  data whereas conservative should be applied to cell centred data. Conservative regridding 
@@ -32,14 +33,15 @@ Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear i
 
 |               |  grid type    |   bilinear?   | conservative? |  stores weights? |
 |---------------|---------------|--------------|----------------|-----------------|
-|  iris         |  uniform     |    yes       |     yes        |     no          | 
+|  iris         |  rectilinear  |    yes       |     yes        |     no          | 
 |  libcf        |  structured  |    yes        |    no         |     yes         |  
 | sigrid        |  structured  |    no         |    yes        |     yes         |
 | ESMF          |  structured  |    yes        |    yes        |     yes         |
 
 Note that some tools have capabilities we have not tested. For instance, libcf supports 
 interpolation in n-dimensions while ESMF supports interpolation from and onto unstructured grids in 
-2D and 3D. 
+2D and 3D. Also note that structured grids (regular topology/irregular points) are more general than rectilinear grids
+(regular topology and points). A rectilinear grid is a structured grid but not vice versa.
 
 ## Accuracy
 
