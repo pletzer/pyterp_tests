@@ -53,7 +53,7 @@ def createPipeline(cube, color=(1.,1.,1.), radius=1.0, show_mesh_as_surface=Fals
 		ac.SetMapper(mp)           
 	# show the grid as tubes
 	ed = vtk.vtkExtractEdges()
-        et = vtk.vtkTubeFilter()
+	et = vtk.vtkTubeFilter()
 	em = vtk.vtkPolyDataMapper()
 	ea = vtk.vtkActor()
 	et.SetRadius(0.01)

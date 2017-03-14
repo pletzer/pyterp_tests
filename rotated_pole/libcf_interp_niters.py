@@ -40,9 +40,39 @@ dst_file = args.dst_file.encode('UTF-8') # python3
 src_field = args.src_field.encode('UTF-8') # python3
 ndims = 2
 
-def createPipeline(lats, lons, nitersData, color=(1.,1.,1.), radius=1.0):
-    n0, n1 = lats.shape
-    numPoints = n0 * n1
+def createPipeline(srcLats, srcLons, dstLats, dstLons, nitersData, radius=1.0):
+    # create the src grid pipeline
+    srcN0, srcN1 = srcLats.shape
+    srcNumPts = srcN0 * srcN1
+    srcSg = vtk.vtkStructuredGrid()
+    srcPt = vtk.vtkPoints()
+    srcPt.SetNumberOfPoints(srcNumPts)
+    k = 0
+    for i1 in range(srcN1):
+        for i0 in range(srcN0):
+            r = radius * 1.05
+            x = r * math.cos(srcLats[i0, i1] * math.pi/180.) * math.cos(srcLons[i0, i1] * math.pi/180.)
+            y = r * math.cos(srcLats[i0, i1] * math.pi/180.) * math.sin(srcLons[i0, i1] * math.pi/180.)
+            z = r * math.sin(srcLats[i0, i1] * math.pi/180.)
+            srcPt.SetPoint(k, x, y, z)
+            k += 1
+    srcSg.SetDimensions(1, srcN0, srcN1)
+    srcSg.SetPoints(srcPt)
+
+    srcEd = vtk.vtkExtractEdges()
+    srcEt = vtk.vtkTubeFilter()
+    srcEm = vtk.vtkPolyDataMapper()
+    srcEa = vtk.vtkActor()
+    srcEt.SetRadius(0.005)
+    srcEd.SetInputData(srcSg)
+    srcEt.SetInputConnection(srcEd.GetOutputPort())
+    srcEm.SetInputConnection(srcEt.GetOutputPort())
+    srcEa.SetMapper(srcEm)
+    srcEa.GetProperty().SetColor(0., 1., 0.)
+    #srcEa.GetProperty().SetOpacity(0.5)    
+
+    dstN0, dstN1 = dstLats.shape
+    numPoints = dstN0 * dstN1
     sg = vtk.vtkStructuredGrid()
     pt = vtk.vtkPoints()
     pt.SetNumberOfPoints(numPoints)
@@ -54,41 +84,57 @@ def createPipeline(lats, lons, nitersData, color=(1.,1.,1.), radius=1.0):
     #ar.SetVoidArray(nitersData, 1, 1)
 
     k = 0
-    for i1 in range(n1):
-        for i0 in range(n0):
-            x = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
-            y = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
-            z = radius * math.sin(lats[i0, i1] * math.pi/180.)
+    for i1 in range(dstN1):
+        for i0 in range(dstN0):
+            elev = 0.0 #0.10 * math.log10(nitersData[i0, i1])
+            r = radius * (1. + elev)
+            x = r * math.cos(dstLats[i0, i1] * math.pi/180.) * math.cos(dstLons[i0, i1] * math.pi/180.)
+            y = r * math.cos(dstLats[i0, i1] * math.pi/180.) * math.sin(dstLons[i0, i1] * math.pi/180.)
+            z = r * math.sin(dstLats[i0, i1] * math.pi/180.)
             pt.SetPoint(k, x, y, z)
             ar.SetTuple(k, (float(nitersData[i0, i1]),))
             k += 1
 
     sg = vtk.vtkStructuredGrid()
-    sg.SetDimensions(1, n0, n1)
+    sg.SetDimensions(1, dstN0, dstN1)
     sg.SetPoints(pt)
     sg.GetPointData().SetScalars(ar)
 
     lu = vtk.vtkLookupTable()
     lu.SetScaleToLog10()
     #lu.SetTableRange(1, 10)
-    lu.SetNumberOfColors(16)
-    lu.SetHueRange(0., 0.666)
+    lu.SetNumberOfColors(256)
+    lu.SetHueRange(0.666, 0.)
     lu.Build()
 
     # add a scalar bar
     sb  = vtk.vtkScalarBarActor()
     sb.SetLookupTable(lu)
     sb.SetTitle("Number of iters")
-    sb.SetNumberOfLabels(9)
+    sb.SetNumberOfLabels(4)
+
+    # show the dst grid
+    dstEd = vtk.vtkExtractEdges()
+    dstEt = vtk.vtkTubeFilter()
+    dstEm = vtk.vtkPolyDataMapper()
+    dstEa = vtk.vtkActor()
+    dstEt.SetRadius(0.005)
+    dstEd.SetInputData(sg)
+    dstEt.SetInputConnection(dstEd.GetOutputPort())
+    dstEm.SetInputConnection(dstEt.GetOutputPort())
+    dstEa.SetMapper(dstEm)
+    dstEa.GetProperty().SetColor(1., 0., 0.)
+    #dstEa.GetProperty().SetOpacity(0.5)    
+
 
     # show number of iterations as a color plot
     mp = vtk.vtkDataSetMapper()
     mp.SetInputData(sg)
     mp.SetLookupTable(lu)
-    mp.SetScalarRange(1, 10)
+    mp.SetScalarRange(1, args.nitermax)
     ac = vtk.vtkActor()
     ac.SetMapper(mp)           
-    return {'actors': [ac, sb], 'stuff': (sg, pt, mp, ar, lu)}
+    return {'actors': [ac, sb, ], 'stuff': (sg, pt, mp, ar, lu, srcSg, srcPt, srcEd, srcEt, srcEm, dstEd, dstEt, dstEm)}
 
 def render(actors):
     # rendering stuff
@@ -259,7 +305,7 @@ print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 if args.plot:
     #plotData(dst['lats'], dst['lons'], niters)
-    pipeline = createPipeline(dst['lats'], dst['lons'], niters, color=(1.,1.,1.), radius=1.0)
+    pipeline = createPipeline(src['lats'], src['lons'], dst['lats'], dst['lons'], niters, radius=1.0)
     render(pipeline['actors'])
 
 
