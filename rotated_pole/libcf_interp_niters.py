@@ -7,6 +7,8 @@ from ctypes import byref, c_int, c_double, c_float, POINTER, c_char_p, c_void_p
 import argparse
 from functools import reduce
 import time
+import vtk
+import math
 
 parser = argparse.ArgumentParser(description='Interpolate using libcf')
 parser.add_argument('--src_field', type=str, dest='src_field', default='pointData',
@@ -37,6 +39,61 @@ src_file = args.src_file.encode('UTF-8') # python3
 dst_file = args.dst_file.encode('UTF-8') # python3
 src_field = args.src_field.encode('UTF-8') # python3
 ndims = 2
+
+def createPipeline(lats, lons, nitersData, color=(1.,1.,1.), radius=1.0):
+    n0, n1 = lats.shape
+    numPoints = n0 * n1
+    sg = vtk.vtkStructuredGrid()
+    pt = vtk.vtkPoints()
+    pt.SetNumberOfPoints(numPoints)
+    k = 0
+    for i1 in range(n1):
+        for i0 in range(n0):
+            x = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.cos(lons[i0, i1] * math.pi/180.)
+            y = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
+            z = radius * math.sin(lats[i0, i1] * math.pi/180.)
+            pt.SetPoint(k, x, y, z)
+            k += 1
+
+    sg = vtk.vtkStructuredGrid()
+    sg.SetDimensions(1, n0, n1)
+    sg.SetPoints(pt)
+    lu = vtk.vtkLookupTable()
+    lu.SetScaleToLog10()
+    #lu.SetTableRange(1, 10)
+    lu.SetNumberOfColors(16)
+    lu.SetHueRange(0., 0.666)
+    lu.Build()
+    # show number of iterations as a color plot
+    ar = vtk.vtkIntArray()
+    numPts = nitersData.shape[0] * nitersData.shape[1]
+    ar.SetNumberOfComponents(1)
+    ar.SetNumberOfTuples(numPts)
+    ar.SetVoidArray(nitersData, 1, 1)
+    sg.GetPointData().AddArray(ar)
+    mp = vtk.vtkDataSetMapper()
+    mp.SetInputData(sg)
+    mp.SetLookupTable(lu)
+    mp.SetScalarRange(1, 10)
+    print(mp)
+    ac = vtk.vtkActor()
+    ac.SetMapper(mp)           
+    return {'actors': [ac], 'stuff': (sg, pt, mp, ar, lu)}
+
+def render(actors):
+    # rendering stuff
+    renderer = vtk.vtkRenderer()
+    renderWindow = vtk.vtkRenderWindow()
+    renderWindow.AddRenderer(renderer)
+    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor.SetRenderWindow(renderWindow)
+    for a in actors:
+        if a is not None:
+            renderer.AddActor(a)
+    renderer.SetBackground(.5, .5, .5)
+    renderWindow.Render()
+    renderWindowInteractor.Start()
+
 
 def createData(filename, prefix, fieldname):
     # use iris to read in the data
@@ -191,7 +248,10 @@ for k, v in timeStats.items():
 print('\t{0:<32} {1:>.3g} sec'.format('total', totTime))
 
 if args.plot:
-    plotData(dst['lats'], dst['lons'], niters)
+    #plotData(dst['lats'], dst['lons'], niters)
+    pipeline = createPipeline(dst['lats'], dst['lons'], niters, color=(1.,1.,1.), radius=1.0)
+    render(pipeline['actors'])
+
 
 # clean up
 destroyData(src['dataId'])
