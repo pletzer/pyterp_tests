@@ -46,6 +46,13 @@ def createPipeline(lats, lons, nitersData, color=(1.,1.,1.), radius=1.0):
     sg = vtk.vtkStructuredGrid()
     pt = vtk.vtkPoints()
     pt.SetNumberOfPoints(numPoints)
+
+    ar = vtk.vtkDoubleArray()
+    numPts = nitersData.shape[0] * nitersData.shape[1]
+    ar.SetNumberOfComponents(1)
+    ar.SetNumberOfTuples(numPts)
+    #ar.SetVoidArray(nitersData, 1, 1)
+
     k = 0
     for i1 in range(n1):
         for i0 in range(n0):
@@ -53,32 +60,35 @@ def createPipeline(lats, lons, nitersData, color=(1.,1.,1.), radius=1.0):
             y = radius * math.cos(lats[i0, i1] * math.pi/180.) * math.sin(lons[i0, i1] * math.pi/180.)
             z = radius * math.sin(lats[i0, i1] * math.pi/180.)
             pt.SetPoint(k, x, y, z)
+            ar.SetTuple(k, (float(nitersData[i0, i1]),))
             k += 1
 
     sg = vtk.vtkStructuredGrid()
     sg.SetDimensions(1, n0, n1)
     sg.SetPoints(pt)
+    sg.GetPointData().SetScalars(ar)
+
     lu = vtk.vtkLookupTable()
     lu.SetScaleToLog10()
     #lu.SetTableRange(1, 10)
     lu.SetNumberOfColors(16)
     lu.SetHueRange(0., 0.666)
     lu.Build()
+
+    # add a scalar bar
+    sb  = vtk.vtkScalarBarActor()
+    sb.SetLookupTable(lu)
+    sb.SetTitle("Number of iters")
+    sb.SetNumberOfLabels(9)
+
     # show number of iterations as a color plot
-    ar = vtk.vtkIntArray()
-    numPts = nitersData.shape[0] * nitersData.shape[1]
-    ar.SetNumberOfComponents(1)
-    ar.SetNumberOfTuples(numPts)
-    ar.SetVoidArray(nitersData, 1, 1)
-    sg.GetPointData().AddArray(ar)
     mp = vtk.vtkDataSetMapper()
     mp.SetInputData(sg)
     mp.SetLookupTable(lu)
     mp.SetScalarRange(1, 10)
-    print(mp)
     ac = vtk.vtkActor()
     ac.SetMapper(mp)           
-    return {'actors': [ac], 'stuff': (sg, pt, mp, ar, lu)}
+    return {'actors': [ac, sb], 'stuff': (sg, pt, mp, ar, lu)}
 
 def render(actors):
     # rendering stuff
