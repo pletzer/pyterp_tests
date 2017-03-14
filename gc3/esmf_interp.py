@@ -134,9 +134,13 @@ if args.plot and nprocs == 1:
     xPoint = dstGrid.get_coords(coord_dim=LON_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     yPoint = dstGrid.get_coords(coord_dim=LAT_INDEX, staggerloc=ESMF.StaggerLoc.CORNER)
     from matplotlib import pylab
+    import matplotlib.colors as colors
     from mpl_toolkits.basemap import Basemap
-    mp = Basemap(resolution='l')
-    mp.drawcoastlines(linewidth=0.25)
-    p = pylab.pcolor(xPoint, yPoint, dstData.data)
+    d = abs(dstData.data)
+    p = pylab.pcolor(xPoint, yPoint, d, cmap='YlOrRd', norm=colors.LogNorm(vmin=1.e-4, vmax=d.max()))
     pylab.colorbar(p)
+    #mp = Basemap(projection='ortho', lat_0=-80., lon_0=0.0, resolution='h')
+    mp = Basemap(resolution='h')
+    mp.drawcoastlines(linewidth=0.25)
+    pylab.title(args.src_field)
     pylab.show()
