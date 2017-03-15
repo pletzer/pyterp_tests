@@ -49,19 +49,35 @@ sg.SetPoints(vxyz)
 sg.GetPointData().SetScalars(vdata)
 
 lu = vtk.vtkLookupTable()
-ncolors = 16 + 1
+ncolors = 256 
 lu.SetNumberOfTableValues(ncolors)
 di = 1.0 / float(ncolors - 1)
+beige = numpy.array((245./255., 222./255., 179./255.))
+turquoise = numpy.array((64/255., 224/255., 208/255.))
+lightblue = numpy.array((0., 191./255., 255./255.))
+blue = numpy.array((0., 0., 255./255.))
+black = numpy.array((0., 0., 0.))
 for i in range(ncolors):
-	r = max(0., 1. - 4*i*di)
-	g = max(0., 1. - 2*i*di)
-	b = 1. - i*di
-	lu.SetTableValue(i, r, g, b)
+	x = i * di
+	if x == 0:
+		rgb = beige
+	elif x < 0.2:
+		rgb = ((0.2 - x)/(0.2 - 0.0))*turquoise + ((x - 0.0)/(0.2 - 0.0))*lightblue
+	elif x < 0.5:
+		rgb = ((0.5 - x)/(0.5 - 0.2))*lightblue + ((x - 0.2)/(0.5 - 0.2))*blue
+	else:
+		rgb = ((1.0 - x)/(1.0 - 0.5))*blue + ((x - 0.5)/(1.0 - 0.5))*black
+		
+	lu.SetTableValue(i, rgb[0], rgb[1], rgb[2])
+
+#lu.SetHueRange(0.67, 0.0)
 lu.SetTableRange(0., vdata.GetMaxNorm())
 
 mp = vtk.vtkDataSetMapper()
 mp.SetInputData(sg)
 mp.SetLookupTable(lu)
+mp.ScalarVisibilityOn()
+mp.UseLookupTableScalarRangeOn()
 
 actor = vtk.vtkActor()
 actor.SetMapper(mp)
@@ -96,14 +112,14 @@ def addPipeline(xyz, pipeline, color=(0., 0., 0.)):
 for j in range(0, n0, n0//nlines):
 	lat = lats[j, :]
 	lon = lons[j, :]
-	xyz = spherePointsFromLatLons(lat, lon)
-	addPipeline(xyz, pipeline, color=(1., 1., 0.))
+	xyz = spherePointsFromLatLons(lat, lon, radius=1.01)
+	addPipeline(xyz, pipeline, color=(1., 0., 1.))
 
 for i in range(0, n1, n1//nlines):
 	lat = lats[:, i]
 	lon = lons[:, i]
-	xyz = spherePointsFromLatLons(lat, lon)
-	addPipeline(xyz, pipeline, color=(0., 1., 1.))
+	xyz = spherePointsFromLatLons(lat, lon, radius=1.01)
+	addPipeline(xyz, pipeline, color=(1., 0., 1.))
 
 # rendering
 ren = vtk.vtkRenderer()
@@ -116,7 +132,7 @@ iren.SetRenderWindow(renWin)
 for a in pipeline['actors']:
 	ren.AddActor(a)
 
-ren.SetBackground(0.1*135./255., 0.1*206./255., 0.3*235./255.)
+ren.SetBackground(0.3, 0.3, 0.3)
 renWin.SetSize(860, 860)
 
 # Interact with the data.
