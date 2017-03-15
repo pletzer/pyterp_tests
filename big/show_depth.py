@@ -5,47 +5,69 @@ import numpy
 nc = netCDF4.Dataset('coords_CF_ORCA12_GO6-2.nc')
 lats = nc.variables['latt'][:]
 lons = nc.variables['lont'][:]
+data = nc.variables['ocndept'][:]
 
 n0, n1 = lats.shape
+npts = n0 * n1
 
 nlines = 40
 
 def spherePointsFromLatLons(lats, lons, radius=1.0):
-	xyz = numpy.zeros((len(lats), 3), numpy.float64)
-	xyz[:, 0] = radius * numpy.cos(lats * numpy.pi/180.) * numpy.cos(lons * numpy.pi/180.)
-	xyz[:, 1] = radius * numpy.cos(lats * numpy.pi/180.) * numpy.sin(lons * numpy.pi/180.)
-	xyz[:, 2] = radius * numpy.sin(lats * numpy.pi/180.)
+	n = reduce(lambda x, y: x*y, lats.shape)
+	la = lats.reshape((n,)) * numpy.pi / 180.
+	lo = lons.reshape((n,)) * numpy.pi / 180.
+	xyz = numpy.zeros((n, 3), numpy.float64)
+	xyz[:, 0] = radius * numpy.cos(la) * numpy.cos(lo)
+	xyz[:, 1] = radius * numpy.cos(la) * numpy.sin(lo)
+	xyz[:, 2] = radius * numpy.sin(la)
 	return xyz
 
 # create nlines coordinate curves
 pipeline = {'stuff': [],
             'actors': []}
 
-# earth
-earth = vtk.vtkEarthSource()
-earth.SetRadius(0.99)
-earth.OutlineOn()
-tubes = vtk.vtkTubeFilter()
-tubes.SetInputConnection(earth.GetOutputPort())
-tubes.SetRadius(0.01)
-tubes.SetNumberOfSides(5)
-emapper = vtk.vtkPolyDataMapper()
-emapper.SetInputConnection(tubes.GetOutputPort())
-eactor = vtk.vtkActor()
-eactor.GetProperty().SetColor(0.1, 0.1, 0.1)
-eactor.SetMapper(emapper)
+# show depth
+xyzGrid = spherePointsFromLatLons(lats, lons)
 
-sphere = vtk.vtkSphereSource()
-sphere.SetRadius(0.98)
-sphere.SetThetaResolution(257)
-sphere.SetPhiResolution(129)
-smapper = vtk.vtkPolyDataMapper()
-smapper.SetInputConnection(sphere.GetOutputPort())
-sactor = vtk.vtkActor()
-sactor.GetProperty().SetColor(0.6, 0.6, 0.6)
-sactor.SetMapper(smapper)
+vxyzData = vtk.vtkDoubleArray()
+vxyzData.SetNumberOfComponents(3)
+vxyzData.SetNumberOfTuples(npts)
+vxyzData.SetVoidArray(xyzGrid, npts*3, 1)
 
-pipeline['actors'] += [eactor, sactor]
+vxyz = vtk.vtkPoints()
+vxyz.SetNumberOfPoints(npts)
+vxyz.SetData(vxyzData)
+
+vdata = vtk.vtkDoubleArray()
+vdata.SetNumberOfComponents(1)
+vdata.SetNumberOfTuples(npts)
+vdata.SetVoidArray(data, npts, 1)
+
+sg = vtk.vtkStructuredGrid()
+sg.SetDimensions(n1, n0, 1) # varies faster in n1
+sg.SetPoints(vxyz)
+sg.GetPointData().SetScalars(vdata)
+
+lu = vtk.vtkLookupTable()
+ncolors = 16 + 1
+lu.SetNumberOfTableValues(ncolors)
+di = 1.0 / float(ncolors - 1)
+for i in range(ncolors):
+	r = max(0., 1. - 4*i*di)
+	g = max(0., 1. - 2*i*di)
+	b = 1. - i*di
+	lu.SetTableValue(i, r, g, b)
+lu.SetTableRange(0., vdata.GetMaxNorm())
+
+mp = vtk.vtkDataSetMapper()
+mp.SetInputData(sg)
+mp.SetLookupTable(lu)
+
+actor = vtk.vtkActor()
+actor.SetMapper(mp)
+
+
+pipeline['actors'] += [actor]
 
 def addPipeline(xyz, pipeline, color=(0., 0., 0.)):
 	npts = xyz.shape[0]
