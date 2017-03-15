@@ -8,7 +8,7 @@ lons = nc.variables['lont'][:]
 
 n0, n1 = lats.shape
 
-nlines = 10
+nlines = 40
 
 def spherePointsFromLatLons(lats, lons, radius=1.0):
 	xyz = numpy.zeros((len(lats), 3), numpy.float64)
@@ -20,23 +20,41 @@ def spherePointsFromLatLons(lats, lons, radius=1.0):
 # create nlines coordinate curves
 pipeline = {'stuff': [],
             'actors': []}
-for j in range(0, n0, n0//nlines):
 
-	lat = lats[j, :]
-	lon = lons[j, :]
-	xyz = spherePointsFromLatLons(lat, lon)
+# earth
+earth = vtk.vtkEarthSource()
+earth.SetRadius(0.99)
+earth.OutlineOn()
+tubes = vtk.vtkTubeFilter()
+tubes.SetInputConnection(earth.GetOutputPort())
+tubes.SetRadius(0.01)
+tubes.SetNumberOfSides(5)
+emapper = vtk.vtkPolyDataMapper()
+emapper.SetInputConnection(tubes.GetOutputPort())
+eactor = vtk.vtkActor()
+eactor.GetProperty().SetColor(0.1, 0.1, 0.1)
+eactor.SetMapper(emapper)
 
-	npts = len(lat)
+sphere = vtk.vtkSphereSource()
+sphere.SetRadius(0.98)
+sphere.SetThetaResolution(257)
+sphere.SetPhiResolution(129)
+smapper = vtk.vtkPolyDataMapper()
+smapper.SetInputConnection(sphere.GetOutputPort())
+sactor = vtk.vtkActor()
+sactor.GetProperty().SetColor(0.6, 0.6, 0.6)
+sactor.SetMapper(smapper)
 
+pipeline['actors'] += [eactor, sactor]
+
+def addPipeline(xyz, pipeline, color=(0., 0., 0.)):
+	npts = xyz.shape[0]
 	vxyz = vtk.vtkDoubleArray()
 	vxyz.SetNumberOfComponents(3)
 	vxyz.SetNumberOfTuples(npts)
-	vxyz.Allocate(npts)
 	vxyz.SetVoidArray(xyz, npts*3, 1)
 
 	pts = vtk.vtkPoints()
-	#pts.SetNumberOfPoints(len(lat))
-	pts.SetDataTypeToDouble()
 	pts.SetData(vxyz)
 
 	line = vtk.vtkPolyLineSource()
@@ -49,9 +67,21 @@ for j in range(0, n0, n0//nlines):
 
 	actor = vtk.vtkActor()
 	actor.SetMapper(mapper)
-	#actor.GetProperty().SetColor(1., 0., 0.)
+	actor.GetProperty().SetColor(color)
 
 	pipeline['actors'].append(actor)
+
+for j in range(0, n0, n0//nlines):
+	lat = lats[j, :]
+	lon = lons[j, :]
+	xyz = spherePointsFromLatLons(lat, lon)
+	addPipeline(xyz, pipeline, color=(1., 1., 0.))
+
+for i in range(0, n1, n1//nlines):
+	lat = lats[:, i]
+	lon = lons[:, i]
+	xyz = spherePointsFromLatLons(lat, lon)
+	addPipeline(xyz, pipeline, color=(0., 1., 1.))
 
 # rendering
 ren = vtk.vtkRenderer()
@@ -64,7 +94,7 @@ iren.SetRenderWindow(renWin)
 for a in pipeline['actors']:
 	ren.AddActor(a)
 
-ren.SetBackground(0.5, 0.5, 0.5)
+ren.SetBackground(0.1*135./255., 0.1*206./255., 0.3*235./255.)
 renWin.SetSize(400, 400)
 
 # Interact with the data.
