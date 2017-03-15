@@ -49,7 +49,7 @@ sg.SetPoints(vxyz)
 sg.GetPointData().SetScalars(vdata)
 
 lu = vtk.vtkLookupTable()
-ncolors = 16 + 1
+ncolors = 256 
 lu.SetNumberOfTableValues(ncolors)
 di = 1.0 / float(ncolors - 1)
 for i in range(ncolors):
@@ -57,11 +57,17 @@ for i in range(ncolors):
 	g = max(0., 1. - 2*i*di)
 	b = 1. - i*di
 	lu.SetTableValue(i, r, g, b)
+
+#lu.SetHueRange(0.67, 0.0)
 lu.SetTableRange(0., vdata.GetMaxNorm())
+print(lu)
+print(vdata.GetMaxNorm())
 
 mp = vtk.vtkDataSetMapper()
 mp.SetInputData(sg)
 mp.SetLookupTable(lu)
+mp.ScalarVisibilityOn()
+mp.UseLookupTableScalarRangeOn()
 
 actor = vtk.vtkActor()
 actor.SetMapper(mp)
@@ -96,13 +102,13 @@ def addPipeline(xyz, pipeline, color=(0., 0., 0.)):
 for j in range(0, n0, n0//nlines):
 	lat = lats[j, :]
 	lon = lons[j, :]
-	xyz = spherePointsFromLatLons(lat, lon)
+	xyz = spherePointsFromLatLons(lat, lon, radius=1.01)
 	addPipeline(xyz, pipeline, color=(1., 1., 0.))
 
 for i in range(0, n1, n1//nlines):
 	lat = lats[:, i]
 	lon = lons[:, i]
-	xyz = spherePointsFromLatLons(lat, lon)
+	xyz = spherePointsFromLatLons(lat, lon, radius=1.01)
 	addPipeline(xyz, pipeline, color=(0., 1., 1.))
 
 # rendering
