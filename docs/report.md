@@ -115,7 +115,7 @@ to be 0.5GB (compare to 10GB observed). Thus, conservative regridding requires 2
 
 | ESMF conservative serial vs MPI 4 processor execution                |  ESMF conservative memory consumption (serial)                                                           
 |:--------------------------------------------------:|:------------------------------------------------------------------------------:
-|![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
+|![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve-parallel.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
 
 ## Summary and recommendations
 
