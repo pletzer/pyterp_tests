@@ -106,7 +106,7 @@ Source (green) and destination (red) grids     | Regridding execution times
 
 The source is a tripolar grid of fixed resolution 3606 x 4322 with the destination grid's resolution being varied. Shown are the execution
 times for computing the conservative interpolation weights (solid lines) and the time to evaluate the conservative 
-interpolation (dashed lines). Running in parallel is only a little faster than running in series and so only the parallel time are shown in the figure. 
+interpolation (dashed lines). Running in parallel is only a little faster than running in series. 
 
 Also shown is the peak memory consumption returned by the SLURM scheduler on Pan (magenta) and the value obtained by eye balling the 
 Unix `top` command (cyan) while the application ran. As such the cyan curve has much lower sampling frequency and should be regarded 
@@ -131,6 +131,8 @@ to be 0.5GB.  This compares with the observed memory footprint for ESMF of 10GB.
  * There appears some initial overhead in computing the weights with ESMF, which appears to depend mostly on the source grid resolution with little dependence on the target grid resolution. Libcf, which uses a Newton algorithm to locate the target cells, has more favourable scaling for 
  low resolution source grid but this advantage almost vanishes as the target grid resolution exceeds the source grid resolution.
 
+ * ESMF has a relatively high memory footprint.  This needs further investigation: some ancillary generation applications require a regrid between very high resoluition source and target grids.
+ 
  * Our recommendation is to implement ESMF conservative and bilinear into iris with support for general structured grids (both source and destination). Ideally, regridding should be a class taking source and destination grids at construction. Given the cost of computing the interpolation weights, 
  it would be advantageous to have methods to store the weights to disk and load the weights from disk. Finally there should be an evaluation step 
  which fills the field with interpolated values.
