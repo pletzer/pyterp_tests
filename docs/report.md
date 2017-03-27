@@ -131,7 +131,7 @@ to be 0.5GB.  This compares with the observed memory footprint for ESMF of 10GB.
  * There appears some initial overhead in computing the weights with ESMF, which appears to depend mostly on the source grid resolution with little dependence on the target grid resolution. Libcf, which uses a Newton algorithm to locate the target cells, has more favourable scaling for 
  low resolution source grid but this advantage almost vanishes as the target grid resolution exceeds the source grid resolution.
 
- * ESMF has a relatively high memory footprint.  This needs further investigation: some ancillary generation applications require a regrid between very high resoluition source and target grids.
+ * ESMF has a relatively high memory footprint.  This needs further investigation: some ancillary generation applications require a regrid between very high resolution source and target grids.
  
  * Our recommendation is to implement ESMF conservative and bilinear into iris with support for general structured grids (both source and destination). Ideally, regridding should be a class taking source and destination grids at construction. Given the cost of computing the interpolation weights, 
  it would be advantageous to have methods to store the weights to disk and load the weights from disk. Finally there should be an evaluation step 

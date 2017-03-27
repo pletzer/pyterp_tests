@@ -265,6 +265,9 @@ ier = pycf.nccf.nccf_get_regrid_niters_pointer(regridId, byref(nitersp))
 assert(ier == pycf.NC_NOERR)
 niters = numpy.ctypeslib.as_array(nitersp, shape=dst['lats'].shape)
 
+# average number of iterations
+print('avrg # or iterations: {}'.format(niters.sum()/float(niters.shape[0]*niters.shape[1])))
+
 # store the reference data values
 dstDataRef = dst['dataArray'].copy()
 
