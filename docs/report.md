@@ -121,7 +121,7 @@ weights must also be stored.
 One advatnage of ESMF over other regridding packages is that the code can be run in MPI. The time required to compute the interpolation weights can be reduced by running in parallel if source and target grids are
 large enough. For a target grid of size 2560x5120, a speedup of 20x can be achieved using 16 cores (70% parallel efficiency).
 
- [alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/plot_parallel_exec.png.png "Parallel speedup"
+ [alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/plot_parallel_exec.png "Parallel speedup"
 
 ## Summary and recommendations
 
@@ -137,7 +137,10 @@ large enough. For a target grid of size 2560x5120, a speedup of 20x can be achie
  * There appears some initial overhead in computing the weights with ESMF, which appears to depend mostly on the source grid resolution with little dependence on the target grid resolution. Libcf, which uses a Newton algorithm to locate the target cells, has more favourable scaling for 
  low resolution source grid but this advantage almost vanishes as the target grid resolution exceeds the source grid resolution.
 
- * ESMF has a relatively high memory footprint.  This needs further investigation: some ancillary generation applications require a regrid between very high resolution source and target grids.
+ * For sufficiently large source and destination grids, we obtain significant speedup with ESMF conservative regridding 
+(70 percent parallel efficiency for 16 cores). 
+
+ * ESMF has a relatively high memory footprint, which might be the result of storing the interpolation weights or from using internal datastructures.  This needs further investigation: some ancillary generation applications require a regrid between very high resolution source and target grids.
  
  * Our recommendation is to implement ESMF conservative and bilinear into iris with support for general structured grids (both source and destination). Ideally, regridding should be a class taking source and destination grids at construction. Given the cost of computing the interpolation weights, 
  it would be advantageous to have methods to store the weights to disk and load the weights from disk. Finally there should be an evaluation step 
