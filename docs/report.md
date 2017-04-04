@@ -119,7 +119,7 @@ weights must also be stored.
 |![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve-parallel.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
 
 One advatnage of ESMF over other regridding packages is that the code can be run in MPI. The time required to compute the interpolation weights can be reduced by running in parallel if source and target grids are
-large enough. For a target grid of size 2560x5120, a speedup of 20x can be achieved using 16 cores (70% parallel efficiency).
+large enough. For a target grid of size 2560x5120, a speedup of 10x can be achieved using 16 cores (70% parallel efficiency).
 
  ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/plot_parallel_exec.png "Parallel speedup")
 
