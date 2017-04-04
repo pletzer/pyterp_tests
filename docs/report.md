@@ -31,12 +31,12 @@ Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear i
 
  The capabilities of the considered regridding tools are summarized below:
 
-|               |  grid type    |   bilinear?   | conservative? |  stores weights? |
-|---------------|---------------|--------------|----------------|-----------------|
-|  iris         |  rectilinear  |    yes       |     yes        |     no          | 
-|  libcf        |  structured  |    yes        |    no         |     yes         |  
-| sigrid        |  structured  |    no         |    yes        |     yes         |
-| ESMF          |  structured  |    yes        |    yes        |     yes         |
+|               |  grid type    |   bilinear?   | conservative? |  stores weights? | runs in parallel? |
+|---------------|---------------|--------------|----------------|-----------------|--------------------|
+|  iris         |  rectilinear  |    yes       |     yes        |     no          | no                 |
+|  libcf        |  structured  |    yes        |    no         |     yes         |  no                 |
+| sigrid        |  structured  |    no         |    yes        |     yes         |  no                 |
+| ESMF          |  structured  |    yes        |    yes        |     yes         | yes                 |
 
 Note that some tools have capabilities we have not tested. For instance, libcf supports 
 interpolation in n-dimensions while ESMF supports interpolation from and onto unstructured grids in 
@@ -111,11 +111,17 @@ interpolation (dashed lines). Running in parallel is only a little faster than r
 Also shown is the peak memory consumption returned by the SLURM scheduler on Pan (magenta) and the value obtained by eye balling the 
 Unix `top` command (cyan) while the application ran. As such the cyan curve has much lower sampling frequency and should be regarded 
 as a time average of the cyan curve. We estimate the memory required to store the source grid coordinates and the source fields
-to be 0.5GB.  This compares with the observed memory footprint for ESMF of 10GB. The conservative regridding requires 20-50x more memory than would be required to store the data only.
+to be 0.5GB.  This compares with the observed memory footprint for ESMF of 10GB. Conservative regridding requires 20-50x more memory than would be required to store the data only but this number must be considered in the light that interpolation 
+weights must also be stored.
 
 | ESMF conservative serial vs MPI 4 processor execution                |  ESMF conservative memory consumption (serial)                                                           
 |:--------------------------------------------------:|:------------------------------------------------------------------------------:
 |![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve-parallel.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
+
+One advatnage of ESMF over other regridding packages is that the code can be run in MPI. The time required to compute the interpolation weights can be reduced by running in parallel if source and target grids are
+large enough. For a target grid of size 2560x5120, a speedup of 20x can be achieved using 16 cores (70% parallel efficiency).
+
+ [alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/plot_parallel_exec.png.png "Parallel speedup"
 
 ## Summary and recommendations
 
