@@ -2,7 +2,7 @@
 
 Alex Pletzer (NIWA/NeSI), Chris Scott (NeSI) and Jamie Kettleborough (UK Met Office)
 
-13 March 2017
+13 March 2017/4 April 2017
 
 ## Overview
 
@@ -31,12 +31,12 @@ Two regridding methods are considered: _bilinear_ and _conservative_. Bilinear i
 
  The capabilities of the considered regridding tools are summarized below:
 
-|               |  grid type    |   bilinear?   | conservative? |  stores weights? |
-|---------------|---------------|--------------|----------------|-----------------|
-|  iris         |  rectilinear  |    yes       |     yes        |     no          | 
-|  libcf        |  structured  |    yes        |    no         |     yes         |  
-| sigrid        |  structured  |    no         |    yes        |     yes         |
-| ESMF          |  structured  |    yes        |    yes        |     yes         |
+|               |  grid type    |   bilinear?   | conservative? |  stores weights? | runs in parallel? |
+|---------------|---------------|--------------|----------------|-----------------|--------------------|
+|  iris         |  rectilinear  |    yes       |     yes        |     no          | no                 |
+|  libcf        |  structured  |    yes        |    no         |     yes         |  no                 |
+| sigrid        |  structured  |    no         |    yes        |     yes         |  no                 |
+| ESMF          |  structured  |    yes        |    yes        |     yes         | yes                 |
 
 Note that some tools have capabilities we have not tested. For instance, libcf supports 
 interpolation in n-dimensions while ESMF supports interpolation from and onto unstructured grids in 
@@ -76,7 +76,7 @@ Source grid (black) and destination field/grid | Difference between ESMF and sig
 
 The execution time required to regrid a source field on a uniform grid to a uniform destination grid is measured. Both the source and destination grid resolutions are varied.
 
-Conservative regridding with ESMF is one order of magnitude slower than sigrid. Bilinear ESMF regridding is 2x faster than conservative ESMF. Libcf is nearly an order of magnitude faster than bilinear ESMF and bilinear iris is another two aroders of magnitudes faster. 
+Conservative regridding with ESMF is one order of magnitude faster than sigrid. Bilinear ESMF regridding is 2x faster than conservative ESMF. Libcf is nearly an order of magnitude faster than bilinear ESMF and bilinear iris is another two orders of magnitudes faster. 
 
 A surprising result is that conservative iris and ESMF regridding run neck to neck - there is no performance penalty in using ESMF, which is more general than iris's regridding. Recall that iris's conservative regridding is restricted to uniform source and destination grids.
 
@@ -95,7 +95,7 @@ weights (wgts) and the application of the weights to the source field (eval) for
 The evaluation step is typically orders of magnituds faster than the computation of weights,
 indicating the need to reuse the weights whenever possible. 
 
-Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage mostly disappears at very high resolutions. Conservative interpolation is only a facto 2x slower than ESMF bilinear at very high resolution. 
+Libcf is faster than ESMF for high resolution (total number of source and destination cells larger than 1e8) but this advantage mostly disappears at very high resolutions. Conservative interpolation is only a factor 2x slower than ESMF bilinear at very high resolution. 
 
 Source (green) and destination (red) grids     | Regridding execution times
 :---------------------------------------------:|:---------------------------------------------:
@@ -106,16 +106,22 @@ Source (green) and destination (red) grids     | Regridding execution times
 
 The source is a tripolar grid of fixed resolution 3606 x 4322 with the destination grid's resolution being varied. Shown are the execution
 times for computing the conservative interpolation weights (solid lines) and the time to evaluate the conservative 
-interpolation (dashed lines). Running in parallel only moderately reduces the overall wall clock time. 
+interpolation (dashed lines). Running in parallel is only a little faster than running in series. 
 
 Also shown is the peak memory consumption returned by the SLURM scheduler on Pan (magenta) and the value obtained by eye balling the 
 Unix `top` command (cyan) while the application ran. As such the cyan curve has much lower sampling frequency and should be regarded 
-as a time average of the cyan curve. From the data required to store the source grid, its coordinates and the fields we the meory footprint
-to be 0.5GB (compare to 10GB observed). Thus, conservative regridding requires 20-50x more memory than would be required to store the data only.
+as a time average of the cyan curve. We estimate the memory required to store the source grid coordinates and the source fields
+to be 0.5GB.  This compares with the observed memory footprint for ESMF of 10GB. Conservative regridding requires 20-50x more memory than would be required to store the data only but this number must be considered in the light that interpolation 
+weights must also be stored.
 
 | ESMF conservative serial vs MPI 4 processor execution                |  ESMF conservative memory consumption (serial)                                                           
 |:--------------------------------------------------:|:------------------------------------------------------------------------------:
 |![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/run_conserve-parallel.png "tripolar to uniform conservative regridding") | ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/memory.png "Memory consumption (serial)")
+
+One advatnage of ESMF over other regridding packages is that the code can be run in MPI. The time required to compute the interpolation weights can be reduced by running in parallel if source and target grids are
+large enough. For a target grid of size 2560x5120, a speedup of 10x can be achieved using 16 cores (70% parallel efficiency).
+
+ ![alt text](https://github.com/pletzer/pyterp_tests/blob/master/big/plot_parallel_exec.png "Parallel speedup")
 
 ## Summary and recommendations
 
@@ -131,6 +137,11 @@ to be 0.5GB (compare to 10GB observed). Thus, conservative regridding requires 2
  * There appears some initial overhead in computing the weights with ESMF, which appears to depend mostly on the source grid resolution with little dependence on the target grid resolution. Libcf, which uses a Newton algorithm to locate the target cells, has more favourable scaling for 
  low resolution source grid but this advantage almost vanishes as the target grid resolution exceeds the source grid resolution.
 
+ * For sufficiently large source and destination grids, we obtain significant speedup with ESMF conservative regridding 
+(70 percent parallel efficiency for 16 cores). 
+
+ * ESMF has a relatively high memory footprint, which might be the result of storing the interpolation weights or from using internal datastructures.  This needs further investigation: some ancillary generation applications require a regrid between very high resolution source and target grids.
+ 
  * Our recommendation is to implement ESMF conservative and bilinear into iris with support for general structured grids (both source and destination). Ideally, regridding should be a class taking source and destination grids at construction. Given the cost of computing the interpolation weights, 
  it would be advantageous to have methods to store the weights to disk and load the weights from disk. Finally there should be an evaluation step 
  which fills the field with interpolated values.
