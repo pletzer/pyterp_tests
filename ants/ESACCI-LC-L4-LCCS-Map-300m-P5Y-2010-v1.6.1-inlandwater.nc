@@ -1,0 +1,1 @@
+/hpcf/data/pletzera/interp_data/ESACCI-LC-L4-LCCS-Map-300m-P5Y-2010-v1.6.1-inlandwater.nc
