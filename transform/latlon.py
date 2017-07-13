@@ -13,7 +13,7 @@ lonMid2d, latMid2d = iris.analysis.cartography.get_xy_grids(cube)
 lonCrn2d, latCrn2d = iris.analysis.cartography.get_xy_contiguous_bounded_grids(cube)
 
 lonCrnRotated, latCrnRotated = iris.analysis.cartography.rotate_pole(lonCrn2d, latCrn2d,
-	                                                                 pole_lon=180.0 + dlon, pole_lat=90.0 + dlat)
+	                                                                 pole_lon=0.0 + dlon, pole_lat=90.0 + dlat)
 
 m, n = lonCrn2d.shape
 pylab.figure(1)
