@@ -56,8 +56,8 @@ def get_cell_areas(cube):
     return spherical_excess
 
 
-src_cube = iris.load('uni.nc', iris.Constraint(cube_func = lambda c: c.var_name == 'cellData'))[0]
-tgt_cube = iris.load('curvi.nc', iris.Constraint(cube_func = lambda c: c.var_name == 'cellData'))[0]
+src_cube = iris.load('curvi.nc', iris.Constraint(cube_func = lambda c: c.var_name == 'cellData'))[0]
+tgt_cube = iris.load('uni.nc', iris.Constraint(cube_func = lambda c: c.var_name == 'cellData'))[0]
 rgrd_factory = ConservativeESMF()
 rgrd = rgrd_factory.regridder(src_cube, tgt_cube)
 
@@ -68,7 +68,7 @@ tgt_cube.data = tgt_cube.data**2
 # regrid
 res_cube = rgrd(src_cube)
 print res_cube
-iris.save(res_cube, 'uni_curvi.nc')
+iris.save(res_cube, 'curvi_uni.nc')
 
 # run some checks
 src_areas = get_cell_areas(src_cube)
