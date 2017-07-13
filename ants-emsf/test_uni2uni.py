@@ -41,3 +41,5 @@ for s, cube in [('src', src_cube), ('tgt', tgt_cube), ('res', res_cube)]:
 	pylab.title(s)
 
 pylab.show()
+
+assert(abs(src_sum - res_sum) < 1.e-6)
