@@ -37,8 +37,17 @@ def computeSphericalTriangleArea(lams, thes):
 
 #####################################################################
 
+def test0():
+	print computeSphericalTriangleArea([0., 2*pi, 2*pi], [0., 0., pi/2.])
+
 def test1():
 	print computeSphericalTriangleArea([0., 2*pi, pi], [0., 0., pi/2.])
 
+def test2():
+	area = computeSphericalTriangleArea([0., 2*pi, 0.], [0., 0., pi/2.]) + computeSphericalTriangleArea([2*pi, 2*pi, 0.], [0., pi/2., pi/2.])
+	assert abs(area - 2*pi) < 1.e-10
+
 if __name__ == '__main__':
+	test0()
 	test1()
+	test2()
