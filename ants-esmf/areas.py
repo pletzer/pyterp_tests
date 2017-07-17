@@ -47,7 +47,35 @@ def test2():
 	area = computeSphericalTriangleArea([0., 2*pi, 0.], [0., 0., pi/2.]) + computeSphericalTriangleArea([2*pi, 2*pi, 0.], [0., pi/2., pi/2.])
 	assert abs(area - 2*pi) < 1.e-10
 
+def test3():
+	area = 0.0
+	area += computeSphericalTriangleArea([0., 2*pi, 0.], [0., 0., pi/2.]) + computeSphericalTriangleArea([2*pi, 2*pi, 0.], [0., pi/2., pi/2.])
+	area -= computeSphericalTriangleArea([0., 2*pi, 0.], [0., 0., -pi/2.]) + computeSphericalTriangleArea([2*pi, 2*pi, 0.], [0., -pi/2., -pi/2.])
+	assert abs(area - 4*pi) < 1.e-10	
+
+def test4():
+	area = 0.0
+	area += computeSphericalTriangleArea([0., 2*pi, 0.], [0., 0., pi/2.]) + computeSphericalTriangleArea([2*pi, 2*pi, 0.], [0., pi/2., pi/2.])
+	area += computeSphericalTriangleArea([0., 2*pi, 0.], [-pi/2., -pi/2., 0.0]) + computeSphericalTriangleArea([2*pi, 2*pi, 0.], [-pi/2., 0.0, 0.0])
+	print 'total area should be 4*pi: ', area
+	assert abs(area - 4*pi) < 1.e-10	
+
+def test5():
+	nthe, nlam = 8, 4
+	dthe, dlam = pi/float(2*nthe), 2*pi/float(nlam)
+	totalArea = 0.0
+	for i in range(nthe):
+		the = 0.0 + i*dthe # -pi/2. + i*dthe
+		for j in range(nlam):
+			lam = 0.0 + j*dlam
+			totalArea += computeSphericalTriangleArea([lam, lam + dlam, lam], [the, the, the + dthe])
+			totalArea += computeSphericalTriangleArea([lam + dlam, lam + dlam, lam], [the, the + dthe, the + dthe])
+	print 'total area = ', totalArea
+
+
 if __name__ == '__main__':
 	test0()
 	test1()
 	test2()
+	test3()
+	test5()
