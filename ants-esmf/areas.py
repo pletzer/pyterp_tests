@@ -23,7 +23,10 @@ def computeSphericalTriangleArea(lams, thes):
 
 	if abs(dt02) < eps:
 		# t0 == t2
-		area = jac*(dt01*sint0 + cost0 - cost1)/dt01**2
+		if abs(dt01) < eps:
+			area = 0.0
+		else:
+			area = jac*(dt01*sint0 + cost0 - cost1)/dt01**2
 	else:
 		if abs(dt12) < eps:
 			# t1 == t2
@@ -99,6 +102,17 @@ def test7():
 	print 'area = ', area
 	assert abs(area - 2.34314575050762) < 1.e-10
 
+def test8():
+	# zero area
+	area = computeSphericalTriangleArea([0., 0., 0.], [0., 0., pi/4.])
+	assert abs(area - 0.0) < 1.e-14
+
+def test9():
+	# zero area
+	area = computeSphericalTriangleArea([pi/4., 2*pi, pi/2.], [pi/2., pi/2., pi/2.])
+	assert abs(area - 0.0) < 1.e-14
+
+
 
 if __name__ == '__main__':
 	test0()
@@ -108,3 +122,5 @@ if __name__ == '__main__':
 	test5()
 	test7()
 	test6()
+	test8()
+	test9()
