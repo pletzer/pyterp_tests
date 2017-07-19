@@ -8,8 +8,10 @@ def computeSphericalTriangleArea(lams, thes):
 
 	t0, t1, t2 = thes
 	l0, l1, l2 = lams
+	print 'thes = ', thes, ' lams = ', lams
 
 	jac = (l1 - l0)*(t2 - t0) - (l2 - l0)*(t1 - t0)
+	print 'jac = ', jac
 
 	dt02 = t0 - t2
 	dt01 = t0 - t1
@@ -20,15 +22,22 @@ def computeSphericalTriangleArea(lams, thes):
 	sint0, sint1 = sin(t0), sin(t1)
 
 	if abs(dt02) < eps:
+		# t0 == t2
+		print 't0 == t2'
 		area = jac*(dt01*sint0 + cost0 - cost1)/dt01**2
 	else:
 		if abs(dt12) < eps:
 			# t1 == t2
+			print 't1 == t2'
 			area = jac*(-dt01*sint1 - cost0 + cost1)/dt01**2
+			print 'area = ', area
 		elif abs(dt01) < eps:
+			print 't1 == t0'
 			# t1 == t0
 			area = jac*(dt02*sint0 + cost0 + cost2)/dt02**2
+			print 'area = ', area
 		else:
+			print 'normal'
 			# all the theta values are different
 			dcos10 = (cost1 - cost0)/dt01
 			dcos12 = (cost1 - cost2)/dt12
@@ -61,21 +70,43 @@ def test4():
 	assert abs(area - 4*pi) < 1.e-10	
 
 def test5():
-	nthe, nlam = 8, 4
+	# half sphere
+	# number of latitude and longitude sections
+	nthe, nlam = 1, 8
 	dthe, dlam = pi/float(2*nthe), 2*pi/float(nlam)
 	totalArea = 0.0
 	for i in range(nthe):
-		the = 0.0 + i*dthe # -pi/2. + i*dthe
+		the = 0.0 + i*dthe # top half
 		for j in range(nlam):
 			lam = 0.0 + j*dlam
 			totalArea += computeSphericalTriangleArea([lam, lam + dlam, lam], [the, the, the + dthe])
 			totalArea += computeSphericalTriangleArea([lam + dlam, lam + dlam, lam], [the, the + dthe, the + dthe])
 	print 'total area = ', totalArea
+	assert abs(totalArea - 2*pi) < 1.e-10
+
+def test6():
+	# half sphere
+	# number of latitude and longitude sections
+	nthe, nlam = 2, 1
+	dthe, dlam = pi/float(2*nthe), 2*pi/float(nlam)
+	totalArea = 0.0
+	for i in range(nthe):
+		the = 0.0 + i*dthe # top half
+		for j in range(nlam):
+			lam = 0.0 + j*dlam
+			totalArea += computeSphericalTriangleArea([lam, lam + dlam, lam], [the, the, the + dthe])
+			totalArea += computeSphericalTriangleArea([lam + dlam, lam + dlam, lam], [the, the + dthe, the + dthe])
+	print 'total area = ', totalArea
+	assert abs(totalArea - 2*pi) < 1.e-10
+
 
 
 if __name__ == '__main__':
+	"""
 	test0()
 	test1()
 	test2()
 	test3()
 	test5()
+	"""
+	test6()
