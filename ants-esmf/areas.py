@@ -23,21 +23,16 @@ def computeSphericalTriangleArea(lams, thes):
 
 	if abs(dt02) < eps:
 		# t0 == t2
-		print 't0 == t2'
 		area = jac*(dt01*sint0 + cost0 - cost1)/dt01**2
 	else:
 		if abs(dt12) < eps:
 			# t1 == t2
-			print 't1 == t2'
 			area = jac*(-dt01*sint1 - cost0 + cost1)/dt01**2
-			print 'area = ', area
 		elif abs(dt01) < eps:
-			print 't1 == t0'
 			# t1 == t0
-			area = jac*(dt02*sint0 + cost0 + cost2)/dt02**2
-			print 'area = ', area
+			#area = -jac*(dt02*sint0 - cost0 + cost2)/dt02**2
+			area = -(l0 - l1) * (cost2 - cost0 - dt02*sint0)/dt02
 		else:
-			print 'normal'
 			# all the theta values are different
 			dcos10 = (cost1 - cost0)/dt01
 			dcos12 = (cost1 - cost2)/dt12
@@ -99,14 +94,17 @@ def test6():
 	print 'total area = ', totalArea
 	assert abs(totalArea - 2*pi) < 1.e-10
 
+def test7():
+	area = computeSphericalTriangleArea([0., 2*pi, 0.], [0., 0., pi/4.])
+	print 'area = ', area
+	assert abs(area - 2.34314575050762) < 1.e-10
 
 
 if __name__ == '__main__':
-	"""
 	test0()
 	test1()
 	test2()
 	test3()
 	test5()
-	"""
+	test7()
 	test6()
