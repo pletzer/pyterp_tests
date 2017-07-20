@@ -112,6 +112,35 @@ def test9():
 	area = computeSphericalTriangleArea([pi/4., 2*pi, pi/2.], [pi/2., pi/2., pi/2.])
 	assert abs(area - 0.0) < 1.e-14
 
+def test10():
+	# half sphere
+	# number of latitude and longitude sections
+	nthe, nlam = 10, 20
+	dthe, dlam = pi/float(2*nthe), 2*pi/float(nlam)
+	totalArea = 0.0
+	for i in range(nthe):
+		the = 0.0 + i*dthe # top half
+		for j in range(nlam):
+			lam = 0.0 + j*dlam
+			totalArea += computeSphericalTriangleArea([lam, lam + dlam, lam], [the, the, the + dthe])
+			totalArea += computeSphericalTriangleArea([lam + dlam, lam + dlam, lam], [the, the + dthe, the + dthe])
+	print 'total area = ', totalArea
+	assert abs(totalArea - 2*pi) < 1.e-10
+
+def test11():
+	# total sphere
+	nthe, nlam = 10, 20
+	dthe, dlam = pi/float(nthe), 2*pi/float(nlam)
+	totalArea = 0.0
+	for i in range(nthe):
+		the = -pi/2. + i*dthe # top half
+		for j in range(nlam):
+			lam = 0.0 + j*dlam
+			totalArea += computeSphericalTriangleArea([lam, lam + dlam, lam], [the, the, the + dthe])
+			totalArea += computeSphericalTriangleArea([lam + dlam, lam + dlam, lam], [the, the + dthe, the + dthe])
+	print 'total area = ', totalArea
+	assert abs(totalArea - 4*pi) < 1.e-10
+
 
 
 if __name__ == '__main__':
@@ -124,3 +153,5 @@ if __name__ == '__main__':
 	test6()
 	test8()
 	test9()
+	test10()
+	test11()
